@@ -202,7 +202,7 @@
 </head>
 <body>
 <div class="container">
-  <h1>Генератор договоров</h1>
+  <h1>Генератор договоров Kia/Hyundai</h1>
   <p class="subtitle">Оформление продажи двигателей</p>
 
   <!-- Скрытый input для ручного выбора шаблона -->
@@ -549,26 +549,29 @@ function createContract() {
     address     = '';
   }
 
+  // Все значения приводим к строкам — никакого undefined
+  const data = {
+    contract_num:  String(contractNum  ?? ''),
+    date:          String(date         ?? ''),
+    client_full:   String(clientFull   ?? ''),
+    client_full_2: String(clientFull2  ?? ''),
+    address:       String(address      ?? ''),
+    engine_full:   String(engineFull   ?? ''),
+    engine_number: String(serial       ?? ''),
+    price_full:    String(priceFull    ?? ''),
+  };
+
   try {
     const zip = new PizZip(templateBuffer);
     const doc = new docxtemplater(zip, {
-      delimiters:    { start: '{{', end: '}}' },
-      paragraphLoop: true,
-      linebreaks:    true,
+      delimiters:  { start: '{{', end: '}}' },
+      linebreaks:  true,
+      nullGetter:  () => '',        // пустая строка вместо undefined
     });
 
-    doc.render({
-      contract_num:  contractNum,
-      date:          date,
-      client_full:   clientFull,
-      client_full_2: clientFull2,
-      address:       address,
-      engine_full:   engineFull,
-      engine_number: serial,
-      price_full:    priceFull,
-    });
+    doc.render(data);
 
-    const out  = doc.getZip().generate({
+    const out = doc.getZip().generate({
       type: 'blob',
       mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     });
@@ -578,13 +581,31 @@ function createContract() {
 
   } catch (e) {
     console.error(e);
-    let msg = 'Ошибка при заполнении шаблона.\n';
-    if (e.properties && e.properties.errors) {
-      msg += e.properties.errors.map(x => x.message).join('\n');
-    } else {
-      msg += e.message;
+    // Если ошибка — пробуем ещё раз с однократными скобками (на случай другого шаблона)
+    try {
+      const zip2 = new PizZip(templateBuffer);
+      const doc2 = new docxtemplater(zip2, {
+        linebreaks: true,
+        nullGetter: () => '',
+      });
+      doc2.render(data);
+      const out2 = doc2.getZip().generate({
+        type: 'blob',
+        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      });
+      const clientName = hasClient ? document.getElementById('clientName').value.trim() : '';
+      const fname = 'Договор_№' + contractNum + (clientName ? '_' + clientName : '') + '.docx';
+      saveAs(out2, fname);
+    } catch (e2) {
+      console.error(e2);
+      let msg = 'Ошибка при заполнении шаблона:\n';
+      if (e.properties && e.properties.errors) {
+        msg += e.properties.errors.map(x => x.message).join('\n');
+      } else {
+        msg += e.message;
+      }
+      alert(msg);
     }
-    alert(msg);
   }
 }
 </script>
