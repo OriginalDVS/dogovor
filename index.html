@@ -556,12 +556,6 @@ function generate() {
 
   try {
     const zip = new PizZip(tplBuffer);
-    const doc = new docxtemplater(zip, {
-      delimiters:    { start: '{{', end: '}}' },
-      paragraphLoop: true,
-      linebreaks:    true,
-      nullGetter:    () => '',
-    });
 
     const data = {
       contract_num:  String(contractNum ?? ''),
@@ -574,6 +568,20 @@ function generate() {
       engine_number: String(engineNum   ?? ''),
       price:         String(priceStr    ?? ''),
     };
+
+    const doc = new docxtemplater(zip, {
+      delimiters:    { start: '{{', end: '}}' },
+      paragraphLoop: true,
+      linebreaks:    true,
+      parser: (tag) => {
+        const key = tag.trim();
+        return {
+          get: (scope) => (scope[key] !== undefined && scope[key] !== null)
+            ? String(scope[key])
+            : ''
+        };
+      },
+    });
 
     doc.render(data);
 
