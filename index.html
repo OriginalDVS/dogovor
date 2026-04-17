@@ -1,34 +1,169 @@
->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Генератор договоров Kia/Hyundai</title>
+<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.44.0/build/docxtemplater.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f1623; color: #e2e8f0; min-height: 100vh; padding: 40px 16px 60px; }
+  h1 { text-align: center; font-size: 2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 6px; letter-spacing: -0.5px; }
+  .subtitle { text-align: center; color: #64748b; font-size: 1rem; margin-bottom: 36px; }
+  .container { max-width: 740px; margin: 0 auto; }
+  .section { background: #1a2233; border: 1px solid #2a3548; border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
+  .section-header { display: flex; align-items: center; gap: 10px; padding: 18px 24px 14px; border-bottom: 1px solid #2a3548; color: #f59e0b; font-weight: 600; font-size: 1rem; }
+  .section-header svg { width: 18px; height: 18px; stroke: #f59e0b; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .section-body { padding: 20px 24px 24px; display: flex; flex-wrap: wrap; gap: 16px; }
+  .field { display: flex; flex-direction: column; gap: 6px; flex: 1 1 220px; }
+  .field.full { flex: 1 1 100%; }
+  label.field-label { font-size: 0.825rem; font-weight: 500; color: #94a3b8; }
+  input[type="text"] { background: #0f1623; border: 1px solid #2a3548; border-radius: 8px; padding: 10px 14px; color: #f1f5f9; font-size: 0.9rem; outline: none; transition: border-color 0.2s; width: 100%; font-family: inherit; }
+  input[type="text"]:focus { border-color: #f59e0b; }
+  input[type="text"].error { border-color: #ef4444; }
+  input::placeholder { color: #3d4f6a; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; background: #0f1623; border: 1px solid #2a3548; border-radius: 8px; padding: 10px 14px; cursor: pointer; user-select: none; transition: border-color 0.2s; flex: 1 1 auto; }
+  .toggle-row:hover { border-color: #3d4f6a; }
+  .toggle-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: #f59e0b; cursor: pointer; flex-shrink: 0; }
+  .toggle-row span { color: #94a3b8; font-size: 0.9rem; }
+  .err-msg { font-size: 0.75rem; color: #ef4444; display: none; }
+  .err-msg.visible { display: block; }
+  .tpl-dot { position: fixed; bottom: 18px; right: 22px; width: 10px; height: 10px; border-radius: 50%; background: #475569; z-index: 999; box-shadow: 0 0 0 2px rgba(0,0,0,0.4); }
+  .tpl-dot.loading { background: #f59e0b; animation: pulse 1.2s infinite; }
+  .tpl-dot.ok { background: #22c55e; }
+  .tpl-dot.fail { background: #ef4444; cursor: pointer; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  #manualFile { display: none; }
+  .price-preview { display: none; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 14px 16px; flex: 1 1 100%; }
+  .price-preview.visible { display: block; }
+  .price-preview .plabel { font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; }
+  .price-preview .pvalue { font-size: 1rem; font-weight: 600; color: #f59e0b; }
+  .btn-create { width: 100%; height: 56px; background: #f59e0b; color: #0f1623; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: background 0.2s; }
+  .btn-create:hover { background: #d97706; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Генератор договоров</h1>
+  <p class="subtitle">Оформление продажи двигателей</p>
 
-  <button class="btn-create" onclick="createContract()">
-    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
-    СОЗДАТЬ ДОГОВОР И СКАЧАТЬ
-  </button>
+  <input type="file" id="manualFile" accept=".docx" onchange="onManualFile(this)">
+
+  <div class="section">
+    <div class="section-header">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Реквизиты договора
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <label class="field-label" for="contractNumber">Номер договора</label>
+        <input type="text" id="contractNumber" placeholder="Например: 12-А">
+      </div>
+      <div class="field">
+        <label class="field-label">Дата договора</label>
+        <label class="toggle-row" for="hasDate">
+          <input type="checkbox" id="hasDate" onchange="toggleDate()">
+          <span>Указать дату</span>
+        </label>
+        <div id="dateInputWrap" style="display:none; margin-top:8px;">
+          <input type="text" id="contractDate" placeholder="17.04.2026">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Данные клиента
+    </div>
+    <div class="section-body">
+      <div class="field full">
+        <label class="toggle-row" for="hasClient">
+          <input type="checkbox" id="hasClient" onchange="toggleClient()">
+          <span>Указать данные клиента</span>
+        </label>
+      </div>
+      <div id="clientFields" style="display:none; width:100%;">
+        <div style="display:flex; flex-wrap:wrap; gap:16px;">
+          <div class="field full"><label class="field-label">ФИО Клиента</label><input type="text" id="clientName"></div>
+          <div class="field"><label class="field-label">Дата рождения</label><input type="text" id="clientBirthDate" placeholder="14.09.1985"></div>
+          <div class="field"><label class="field-label">Серия и номер паспорта</label><input type="text" id="passportNumber"></div>
+          <div class="field"><label class="field-label">Дата выдачи паспорта</label><input type="text" id="passportDate"></div>
+          <div class="field"><label class="field-label">Код подразделения</label><input type="text" id="passportCode"></div>
+          <div class="field full"><label class="field-label">Кем выдан паспорт</label><input type="text" id="passportBy"></div>
+          <div class="field full"><label class="field-label">Адрес регистрации</label><input type="text" id="address"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+      Характеристики двигателя
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <label class="field-label">Модель двигателя</label>
+        <input type="text" id="engineModel" list="engine-models">
+        <datalist id="engine-models"><option value="G4FA"><option value="G4FC"><option value="G4FG"><option value="G4NA"><option value="G4KD"><option value="G4KE"></datalist>
+      </div>
+      <div class="field">
+        <label class="field-label">Объем двигателя</label>
+        <input type="text" id="engineVolume" list="engine-volumes">
+        <datalist id="engine-volumes"><option value="0.8"><option value="1.4"><option value="1.6"><option value="1.8"><option value="2.0"><option value="2.4"></datalist>
+      </div>
+      <div class="field">
+        <label class="field-label">Заводской номер двигателя</label>
+        <input type="text" id="engineSerial">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Стоимость
+    </div>
+    <div class="section-body">
+      <div class="field">
+        <label class="field-label">Сумма (₽)</label>
+        <input type="text" id="price" list="price-list" oninput="updatePrice()">
+        <datalist id="price-list"><option value="75000"><option value="105000"><option value="115000"><option value="125000"><option value="129000"><option value="135000"><option value="170000"><option value="180000"></datalist>
+      </div>
+      <label class="toggle-row" style="align-self:flex-end;">
+        <input type="checkbox" id="addTax" onchange="updatePrice()">
+        <span>Добавить +7%</span>
+      </label>
+      <div class="price-preview" id="pricePreview">
+        <div class="plabel">Итоговая сумма:</div>
+        <div class="pvalue" id="pricePreviewValue"></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-create" onclick="createContract()">СОЗДАТЬ ДОГОВОР И СКАЧАТЬ</button>
 </div>
 
-<!-- Точка статуса шаблона (красная = нет шаблона, нажми чтобы выбрать; зелёная = загружен) -->
-<div class="tpl-dot loading" id="tplDot" title="Шаблон не загружен — нажмите чтобы выбрать файл" onclick="dotClick()"></div>
+<div class="tpl-dot loading" id="tplDot" onclick="dotClick()"></div>
 
 <script>
-// ─── Загрузка шаблона ────────────────────────────────────────────────────
 let templateBuffer = null;
 
 function setDot(state) {
   const dot = document.getElementById('tplDot');
   dot.className = 'tpl-dot ' + state;
-  dot.title = state === 'fail' ? 'Шаблон не найден — нажмите чтобы выбрать файл'
-            : state === 'ok'   ? 'Шаблон загружен' : '';
 }
 
-function dotClick() {
-  if (!templateBuffer) document.getElementById('manualFile').click();
-}
+function dotClick() { if (!templateBuffer) document.getElementById('manualFile').click(); }
 
 async function loadTemplate() {
-  setDot('loading');
   try {
     const resp = await fetch('./shablon_dogovora.docx');
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    if (!resp.ok) throw new Error();
     templateBuffer = await resp.arrayBuffer();
     setDot('ok');
   } catch (e) { setDot('fail'); }
@@ -38,212 +173,97 @@ function onManualFile(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => { templateBuffer = e.target.result; setDot('ok'); };
+  reader.onload = function(e) { templateBuffer = e.target.result; setDot('ok'); };
   reader.readAsArrayBuffer(file);
 }
 
 loadTemplate();
 
-// ─── Дата ────────────────────────────────────────────────────────────────
-function toggleDate() {
-  document.getElementById('dateInputWrap').style.display =
-    document.getElementById('hasDate').checked ? 'block' : 'none';
-}
+function toggleDate() { document.getElementById('dateInputWrap').style.display = document.getElementById('hasDate').checked ? 'block' : 'none'; }
+function toggleClient() { document.getElementById('clientFields').style.display = document.getElementById('hasClient').checked ? 'block' : 'none'; }
 
-// ─── Клиент ──────────────────────────────────────────────────────────────
-function toggleClient() {
-  const on = document.getElementById('hasClient').checked;
-  document.getElementById('clientFields').style.display = on ? 'block' : 'none';
-  if (!on) {
-    ['clientName','clientBirthDate','passportNumber','passportDate',
-     'passportCode','passportBy','address'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.remove('error');
-      const err = document.getElementById('err-' + id);
-      if (err) err.classList.remove('visible');
-    });
-  }
-}
-
-// ─── Число прописью ──────────────────────────────────────────────────────
-const ones  = ['','один','два','три','четыре','пять','шесть','семь','восемь','девять',
-               'десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать',
-               'шестнадцать','семнадцать','восемнадцать','девятнадцать'];
-const tens  = ['','','двадцать','тридцать','сорок','пятьдесят',
-               'шестьдесят','семьдесят','восемьдесят','девяносто'];
-const hunds = ['','сто','двести','триста','четыреста','пятьсот',
-               'шестьсот','семьсот','восемьсот','девятьсот'];
-const onesF = ['','одна','две','три','четыре','пять','шесть','семь','восемь','девять',
-               'десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать',
-               'шестнадцать','семнадцать','восемнадцать','девятнадцать'];
+// ─── СУММА ПРОПИСЬЮ ───
+const ones = ['','один','два','три','четыре','пять','шесть','семь','восемь','девять','десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать','шестнадцать','семнадцать','восемнадцать','девятнадцать'];
+const tens = ['','','двадцать','тридцать','сорок','пятьдесят','шестьдесят','семьдесят','восемьдесят','девяносто'];
+const hunds = ['','сто','двести','триста','четыреста','пятьсот','шестьсот','семьсот','восемьсот','девятьсот'];
+const onesF = ['','одна','две','три','четыре','пять','шесть','семь','восемь','девять'];
 
 function threeDigits(n, fem) {
-  if (!n) return '';
   let h = Math.floor(n/100), rest = n%100, t = Math.floor(rest/10), o = rest%10, p = [];
   if (h) p.push(hunds[h]);
-  if (rest < 20) { if (rest) p.push(fem ? onesF[rest] : ones[rest]); }
+  if (rest < 20) { if (rest) p.push(fem && rest < 10 ? onesF[rest] : ones[rest]); }
   else { if (t) p.push(tens[t]); if (o) p.push(fem ? onesF[o] : ones[o]); }
   return p.join(' ');
 }
-function thousandWord(n) {
-  let l2=n%100, l1=n%10;
-  if(l2>=11&&l2<=19) return 'тысяч';
-  if(l1===1) return 'тысяча';
-  if(l1>=2&&l1<=4) return 'тысячи';
-  return 'тысяч';
-}
-function numToWords(n) {
-  if(!n) return 'ноль';
-  let p=[],th=Math.floor(n/1000),rem=n%1000;
-  if(th){let t=threeDigits(th,true);if(t)p.push(t);p.push(thousandWord(th));}
-  if(rem){let r=threeDigits(rem,false);if(r)p.push(r);}
-  return p.join(' ');
-}
-function formatNum(n) { return n.toLocaleString('ru-RU'); }
 
-// ─── Предпросмотр цены ───────────────────────────────────────────────────
+function numToWords(n) {
+  if (!n) return 'ноль';
+  let p = [], th = Math.floor(n/1000), rem = n%1000;
+  if (th) { 
+    p.push(threeDigits(th, true));
+    let l1 = th % 10, l2 = th % 100;
+    if (l2 >= 11 && l2 <= 19) p.push('тысяч');
+    else if (l1 === 1) p.push('тысяча');
+    else if (l1 >= 2 && l1 <= 4) p.push('тысячи');
+    else p.push('тысяч');
+  }
+  if (rem) p.push(threeDigits(rem, false));
+  return p.join(' ').trim();
+}
+
 function updatePrice() {
   const raw = document.getElementById('price').value.replace(/\D/g,'');
-  const tax = document.getElementById('addTax').checked;
-  const preview = document.getElementById('pricePreview');
-  if (!raw) { preview.classList.remove('visible'); return; }
-  let price = parseInt(raw, 10);
-  if (tax) price = Math.round(price * 1.07);
-  preview.classList.add('visible');
-  document.getElementById('pricePreviewValue').textContent =
-    formatNum(price) + ' (' + numToWords(price) + ') рублей';
+  if (!raw) { document.getElementById('pricePreview').classList.remove('visible'); return; }
+  let p = parseInt(raw);
+  if (document.getElementById('addTax').checked) p = Math.round(p * 1.07);
+  document.getElementById('pricePreview').classList.add('visible');
+  document.getElementById('pricePreviewValue').textContent = p.toLocaleString() + ' (' + numToWords(p) + ') руб.';
 }
 
-// ─── Валидация ───────────────────────────────────────────────────────────
-function checkField(id) {
-  const el = document.getElementById(id);
-  if (!el) return true;
-  const ok = el.value.trim() !== '';
-  el.classList.toggle('error', !ok);
-  const err = document.getElementById('err-' + id);
-  if (err) err.classList.toggle('visible', !ok);
-  return ok;
-}
-
-// ─── Заполнение DOCX: прямая замена в XML ────────────────────────────────
-// Word разбивает {{переменная}} на несколько XML-фрагментов.
-// Сначала склеиваем эти фрагменты, потом делаем замену.
-
-function escXml(s) {
-  return String(s ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-// Переводим \n в Word-перенос строки (внутри <w:r>)
-function toXmlVal(str) {
-  return escXml(str).split('\n')
-    .join('</w:t><w:br/><w:t xml:space="preserve">');
-}
-
-function fillDocx(buffer, data) {
-  const zip = new PizZip(buffer);
-  let xml = zip.file('word/document.xml').asText();
-
-  // Шаг 1: склеиваем {{ разбитые XML-тегами (напр. <w:r>{ + <w:r>{)
-  xml = xml.replace(/\{(<[^>]*>)*\{/g, '{{');
-  // Шаг 2: склеиваем }}
-  xml = xml.replace(/\}(<[^>]*>)*\}/g, '}}');
-  // Шаг 3: убираем XML-теги внутри {{ ... }} (мог остаться тег переноса)
-  xml = xml.replace(/\{\{[\s\S]*?\}\}/g, m => m.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim());
-
-  // Шаг 4: заменяем каждую переменную
-  for (const [key, val] of Object.entries(data)) {
-    const re = new RegExp('\\{\\{\\s*' + key.replace(/_/g, '[_\\s]') + '\\s*\\}\\}', 'g');
-    xml = xml.replace(re, toXmlVal(val));
-  }
-
-  zip.file('word/document.xml', xml);
-  return zip.generate({
-    type: 'blob',
-    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-  });
-}
-
-// ─── Константы клиента ───────────────────────────────────────────────────
-const CLIENT_EMPTY   = '_________________________________________________________________________\n___________________________________________________________________________________________________________________________________________________________________________________________';
-const CLIENT_EMPTY_2 = '\n\n\n\n';
-
-// ─── Создание договора ───────────────────────────────────────────────────
 function createContract() {
-  if (!templateBuffer) {
-    alert('Шаблон ещё не загружен. Нажмите на точку в правом нижнем углу чтобы выбрать файл.');
-    return;
+  if (!templateBuffer) return alert('Загрузите шаблон!');
+
+  // Получаем значения или пустую строку, чтобы избежать undefined
+  const getV = (id) => document.getElementById(id).value.trim() || "";
+
+  const contractNum = getV('contractNumber') || "___";
+  const date = document.getElementById('hasDate').checked ? (getV('contractDate') || "__________") : "__________";
+  
+  const model = getV('engineModel');
+  const vol = getV('engineVolume');
+  const engineFull = (model || vol) ? `${model} ${vol} л`.trim() : "________________";
+  const serial = getV('engineSerial') || "________________";
+
+  const rawP = parseInt(getV('price').replace(/\D/g,'')) || 0;
+  const finalP = document.getElementById('addTax').checked ? Math.round(rawP * 1.07) : rawP;
+  const priceFull = finalP > 0 ? `${finalP.toLocaleString()} (${numToWords(finalP)})` : "________________";
+
+  let clientFull = "_________________________________________________________________________";
+  let address = "_________________________________________________________________________";
+
+  if (document.getElementById('hasClient').checked) {
+    const n = getV('clientName'), b = getV('clientBirthDate'), pn = getV('passportNumber'), pd = getV('passportDate'), pb = getV('passportBy'), pc = getV('passportCode');
+    clientFull = `${n}, ${b} г.р., паспорт ${pn}, выдан ${pd} ${pb}, ${pc}`;
+    address = getV('address');
   }
-
-  let valid = true;
-  ['contractNumber','engineModel','engineVolume','engineSerial','price']
-    .forEach(id => { if (!checkField(id)) valid = false; });
-
-  const hasClient = document.getElementById('hasClient').checked;
-  if (hasClient) {
-    ['clientName','clientBirthDate','passportNumber','passportDate',
-     'passportCode','passportBy','address']
-      .forEach(id => { if (!checkField(id)) valid = false; });
-  }
-
-  if (!valid) {
-    document.querySelector('.section').scrollIntoView({ behavior:'smooth', block:'start' });
-    return;
-  }
-
-  const hasDate     = document.getElementById('hasDate').checked;
-  const date        = hasDate ? (document.getElementById('contractDate').value.trim() || '__________') : '__________';
-  const contractNum = document.getElementById('contractNumber').value.trim();
-  const model       = document.getElementById('engineModel').value.trim();
-  const vol         = document.getElementById('engineVolume').value.trim();
-  const serial      = document.getElementById('engineSerial').value.trim();
-  const engineFull  = model + ' ' + vol + ' л';
-
-  const rawPrice   = parseInt(document.getElementById('price').value.replace(/\D/g,''), 10);
-  const tax        = document.getElementById('addTax').checked;
-  const finalPrice = tax ? Math.round(rawPrice * 1.07) : rawPrice;
-  const priceFull  = formatNum(finalPrice) + ' (' + numToWords(finalPrice) + ')';
-
-  let clientFull, clientFull2, address;
-  if (hasClient) {
-    const name  = document.getElementById('clientName').value.trim();
-    const bday  = document.getElementById('clientBirthDate').value.trim();
-    const pnum  = document.getElementById('passportNumber').value.trim();
-    const pdate = document.getElementById('passportDate').value.trim();
-    const pby   = document.getElementById('passportBy').value.trim();
-    const pcode = document.getElementById('passportCode').value.trim();
-    address     = document.getElementById('address').value.trim();
-    clientFull  = `${name}, ${bday} г.р., паспорт ${pnum}, выдан ${pdate} ${pby}, ${pcode}`;
-    clientFull2 = clientFull;
-  } else {
-    clientFull  = CLIENT_EMPTY;
-    clientFull2 = CLIENT_EMPTY_2;
-    address     = '';
-  }
-
-  const data = {
-    contract_num:  contractNum,
-    date:          date,
-    client_full:   clientFull,
-    client_full_2: clientFull2,
-    address:       address,
-    engine_full:   engineFull,
-    engine_number: serial,
-    price_full:    priceFull,
-  };
 
   try {
-    const clientName = hasClient ? document.getElementById('clientName').value.trim() : '';
-    const fname = 'Договор_№' + contractNum + (clientName ? '_' + clientName : '') + '.docx';
-    const blob = fillDocx(templateBuffer, data);
-    saveAs(blob, fname);
-  } catch (e) {
-    console.error(e);
-    alert('Ошибка при заполнении шаблона:\n' + e.message);
-  }
+    const zip = new PizZip(templateBuffer);
+    const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+
+    doc.render({
+      contract_num: contractNum,
+      date: date,
+      client_full: clientFull,
+      address: address,
+      engine_full: engineFull,
+      engine_number: serial,
+      price_full: priceFull
+    });
+
+    const out = doc.getZip().generate({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    saveAs(out, `Договор_№${contractNum}.docx`);
+  } catch (e) { alert('Ошибка при генерации!'); }
 }
 </script>
 </body>
