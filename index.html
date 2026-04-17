@@ -1,353 +1,4 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Генератор договоров Kia/Hyundai</title>
-<script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.44.0/build/docxtemplater.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: #0f1623;
-    color: #e2e8f0;
-    min-height: 100vh;
-    padding: 40px 16px 60px;
-  }
-
-  h1 {
-    text-align: center;
-    font-size: 2rem;
-    font-weight: 700;
-    color: #f1f5f9;
-    margin-bottom: 6px;
-    letter-spacing: -0.5px;
-  }
-
-  .subtitle {
-    text-align: center;
-    color: #64748b;
-    font-size: 1rem;
-    margin-bottom: 36px;
-  }
-
-  .container { max-width: 740px; margin: 0 auto; }
-
-  .section {
-    background: #1a2233;
-    border: 1px solid #2a3548;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    overflow: hidden;
-  }
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 18px 24px 14px;
-    border-bottom: 1px solid #2a3548;
-    color: #f59e0b;
-    font-weight: 600;
-    font-size: 1rem;
-  }
-
-  .section-header svg {
-    width: 18px; height: 18px;
-    stroke: #f59e0b; fill: none;
-    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-    flex-shrink: 0;
-  }
-
-  .section-body {
-    padding: 20px 24px 24px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex: 1 1 220px;
-  }
-
-  .field.full { flex: 1 1 100%; }
-
-  label.field-label {
-    font-size: 0.825rem;
-    font-weight: 500;
-    color: #94a3b8;
-  }
-
-  input[type="text"] {
-    background: #0f1623;
-    border: 1px solid #2a3548;
-    border-radius: 8px;
-    padding: 10px 14px;
-    color: #f1f5f9;
-    font-size: 0.9rem;
-    outline: none;
-    transition: border-color 0.2s;
-    width: 100%;
-    font-family: inherit;
-  }
-
-  input[type="text"]:focus { border-color: #f59e0b; }
-  input[type="text"].error { border-color: #ef4444; }
-  input::placeholder { color: #3d4f6a; }
-
-  .toggle-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #0f1623;
-    border: 1px solid #2a3548;
-    border-radius: 8px;
-    padding: 10px 14px;
-    cursor: pointer;
-    user-select: none;
-    transition: border-color 0.2s;
-    flex: 1 1 auto;
-  }
-
-  .toggle-row:hover { border-color: #3d4f6a; }
-
-  .toggle-row input[type="checkbox"] {
-    width: 16px; height: 16px;
-    accent-color: #f59e0b;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-
-  .toggle-row span { color: #94a3b8; font-size: 0.9rem; }
-
-  .err-msg { font-size: 0.75rem; color: #ef4444; display: none; }
-  .err-msg.visible { display: block; }
-
-  /* Точка статуса шаблона */
-  .tpl-dot {
-    position: fixed;
-    bottom: 18px;
-    right: 22px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #475569;
-    cursor: default;
-    z-index: 999;
-    transition: background 0.4s;
-    box-shadow: 0 0 0 2px rgba(0,0,0,0.4);
-  }
-  .tpl-dot.loading { background: #f59e0b; animation: pulse 1.2s infinite; }
-  .tpl-dot.ok      { background: #22c55e; cursor: default; }
-  .tpl-dot.fail    { background: #ef4444; cursor: pointer; }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.4; }
-  }
-
-  /* Скрытый input для fallback */
-  #manualFile { display: none; }
-
-  .price-preview {
-    display: none;
-    background: rgba(245,158,11,0.1);
-    border: 1px solid rgba(245,158,11,0.25);
-    border-radius: 8px;
-    padding: 14px 16px;
-    flex: 1 1 100%;
-  }
-  .price-preview.visible { display: block; }
-  .price-preview .plabel { font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; }
-  .price-preview .pvalue { font-size: 1rem; font-weight: 600; color: #f59e0b; }
-
-  .btn-create {
-    width: 100%;
-    height: 56px;
-    background: #f59e0b;
-    color: #0f1623;
-    border: none;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    margin-top: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: background 0.2s, transform 0.1s;
-  }
-  .btn-create:hover { background: #d97706; }
-  .btn-create:active { transform: scale(0.99); }
-  .btn-create svg {
-    width: 20px; height: 20px;
-    stroke: #0f1623; fill: none;
-    stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
-  }
-
-  @media (max-width: 600px) {
-    h1 { font-size: 1.5rem; }
-    .field { flex: 1 1 100%; }
-    .section-body { padding: 16px; gap: 14px; }
-  }
-</style>
-</head>
-<body>
-<div class="container">
-  <h1>Генератор договоров Kia/Hyundai</h1>
-  <p class="subtitle">Оформление продажи двигателей</p>
-
-  <!-- Скрытый input для ручного выбора шаблона -->
-  <input type="file" id="manualFile" accept=".docx" onchange="onManualFile(this)">
-
-  <!-- Реквизиты -->
-  <div class="section">
-    <div class="section-header">
-      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      Реквизиты договора
-    </div>
-    <div class="section-body">
-      <div class="field">
-        <label class="field-label" for="contractNumber">Номер договора</label>
-        <input type="text" id="contractNumber" placeholder="Например: 12-А">
-        <span class="err-msg" id="err-contractNumber">Введите номер договора</span>
-      </div>
-      <div class="field">
-        <label class="field-label">Дата договора</label>
-        <label class="toggle-row" for="hasDate">
-          <input type="checkbox" id="hasDate" onchange="toggleDate()">
-          <span>Указать дату</span>
-        </label>
-        <div id="dateInputWrap" style="display:none;">
-          <input type="text" id="contractDate" placeholder="17.04.2026">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Клиент -->
-  <div class="section">
-    <div class="section-header">
-      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Данные клиента
-    </div>
-    <div class="section-body">
-      <div class="field full">
-        <label class="toggle-row" for="hasClient">
-          <input type="checkbox" id="hasClient" onchange="toggleClient()">
-          <span>Указать данные клиента</span>
-        </label>
-      </div>
-      <div id="clientFields" style="display:none; width:100%;">
-        <div style="display:flex; flex-wrap:wrap; gap:16px;">
-          <div class="field full">
-            <label class="field-label" for="clientName">ФИО Клиента</label>
-            <input type="text" id="clientName" placeholder="Иванов Иван Иванович">
-            <span class="err-msg" id="err-clientName">Введите ФИО клиента</span>
-          </div>
-          <div class="field">
-            <label class="field-label" for="clientBirthDate">Дата рождения</label>
-            <input type="text" id="clientBirthDate" placeholder="14.09.1985">
-            <span class="err-msg" id="err-clientBirthDate">Введите дату рождения</span>
-          </div>
-          <div class="field">
-            <label class="field-label" for="passportNumber">Серия и номер паспорта</label>
-            <input type="text" id="passportNumber" placeholder="1234 567890">
-            <span class="err-msg" id="err-passportNumber">Введите серию и номер</span>
-          </div>
-          <div class="field">
-            <label class="field-label" for="passportDate">Дата выдачи паспорта</label>
-            <input type="text" id="passportDate" placeholder="20.10.2010">
-            <span class="err-msg" id="err-passportDate">Введите дату выдачи</span>
-          </div>
-          <div class="field">
-            <label class="field-label" for="passportCode">Код подразделения</label>
-            <input type="text" id="passportCode" placeholder="123-456">
-            <span class="err-msg" id="err-passportCode">Введите код</span>
-          </div>
-          <div class="field full">
-            <label class="field-label" for="passportBy">Кем выдан паспорт</label>
-            <input type="text" id="passportBy" placeholder="Отделом УФМС России по г. Москве">
-            <span class="err-msg" id="err-passportBy">Укажите кем выдан паспорт</span>
-          </div>
-          <div class="field full">
-            <label class="field-label" for="address">Адрес регистрации</label>
-            <input type="text" id="address" placeholder="г. Москва, ул. Ленина, д. 1, кв. 1">
-            <span class="err-msg" id="err-address">Введите адрес регистрации</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Двигатель -->
-  <div class="section">
-    <div class="section-header">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
-      Характеристики двигателя
-    </div>
-    <div class="section-body">
-      <div class="field">
-        <label class="field-label" for="engineModel">Модель двигателя</label>
-        <input type="text" id="engineModel" list="engine-models" placeholder="Выберите или введите...">
-        <datalist id="engine-models">
-          <option value="G4FA"><option value="G4FC"><option value="G4FG">
-          <option value="G4NA"><option value="G4KD"><option value="G4KE">
-        </datalist>
-        <span class="err-msg" id="err-engineModel">Укажите модель двигателя</span>
-      </div>
-      <div class="field">
-        <label class="field-label" for="engineVolume">Объем двигателя</label>
-        <input type="text" id="engineVolume" list="engine-volumes" placeholder="Выберите или введите...">
-        <datalist id="engine-volumes">
-          <option value="0.8"><option value="1.4"><option value="1.6">
-          <option value="1.8"><option value="2.0"><option value="2.4">
-        </datalist>
-        <span class="err-msg" id="err-engineVolume">Укажите объем двигателя</span>
-      </div>
-      <div class="field">
-        <label class="field-label" for="engineSerial">Заводской номер двигателя</label>
-        <input type="text" id="engineSerial" placeholder="XXXXXX">
-        <span class="err-msg" id="err-engineSerial">Введите заводской номер</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Стоимость -->
-  <div class="section">
-    <div class="section-header">
-      <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-      Стоимость
-    </div>
-    <div class="section-body">
-      <div class="field">
-        <label class="field-label" for="price">Сумма (₽)</label>
-        <input type="text" id="price" list="price-list" placeholder="Укажите сумму" oninput="updatePrice()">
-        <datalist id="price-list">
-          <option value="75000"><option value="105000"><option value="115000">
-          <option value="125000"><option value="129000"><option value="135000">
-          <option value="170000"><option value="180000">
-        </datalist>
-        <span class="err-msg" id="err-price">Введите корректную сумму</span>
-      </div>
-      <label class="toggle-row" style="align-self:flex-end; padding:10px 14px;">
-        <input type="checkbox" id="addTax" onchange="updatePrice()">
-        <span>Добавить +7% к сумме</span>
-      </label>
-      <div class="price-preview" id="pricePreview">
-        <div class="plabel">Итоговая сумма прописью:</div>
-        <div class="pvalue" id="pricePreviewValue"></div>
-      </div>
-    </div>
-  </div>
+>
 
   <button class="btn-create" onclick="createContract()">
     <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
@@ -365,19 +16,12 @@ let templateBuffer = null;
 function setDot(state) {
   const dot = document.getElementById('tplDot');
   dot.className = 'tpl-dot ' + state;
-  if (state === 'fail') {
-    dot.title = 'Шаблон не загружен — нажмите чтобы выбрать файл';
-  } else if (state === 'ok') {
-    dot.title = 'Шаблон загружен';
-  } else {
-    dot.title = '';
-  }
+  dot.title = state === 'fail' ? 'Шаблон не найден — нажмите чтобы выбрать файл'
+            : state === 'ok'   ? 'Шаблон загружен' : '';
 }
 
 function dotClick() {
-  if (!templateBuffer) {
-    document.getElementById('manualFile').click();
-  }
+  if (!templateBuffer) document.getElementById('manualFile').click();
 }
 
 async function loadTemplate() {
@@ -387,19 +31,14 @@ async function loadTemplate() {
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     templateBuffer = await resp.arrayBuffer();
     setDot('ok');
-  } catch (e) {
-    setDot('fail');
-  }
+  } catch (e) { setDot('fail'); }
 }
 
 function onManualFile(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = function(e) {
-    templateBuffer = e.target.result;
-    setDot('ok');
-  };
+  reader.onload = e => { templateBuffer = e.target.result; setDot('ok'); };
   reader.readAsArrayBuffer(file);
 }
 
@@ -446,29 +85,26 @@ function threeDigits(n, fem) {
   else { if (t) p.push(tens[t]); if (o) p.push(fem ? onesF[o] : ones[o]); }
   return p.join(' ');
 }
-
 function thousandWord(n) {
-  let l2 = n%100, l1 = n%10;
-  if (l2>=11 && l2<=19) return 'тысяч';
-  if (l1===1) return 'тысяча';
-  if (l1>=2 && l1<=4) return 'тысячи';
+  let l2=n%100, l1=n%10;
+  if(l2>=11&&l2<=19) return 'тысяч';
+  if(l1===1) return 'тысяча';
+  if(l1>=2&&l1<=4) return 'тысячи';
   return 'тысяч';
 }
-
 function numToWords(n) {
-  if (!n) return 'ноль';
-  let p = [], th = Math.floor(n/1000), rem = n%1000;
-  if (th) { let t = threeDigits(th,true); if(t) p.push(t); p.push(thousandWord(th)); }
-  if (rem) { let r = threeDigits(rem,false); if(r) p.push(r); }
+  if(!n) return 'ноль';
+  let p=[],th=Math.floor(n/1000),rem=n%1000;
+  if(th){let t=threeDigits(th,true);if(t)p.push(t);p.push(thousandWord(th));}
+  if(rem){let r=threeDigits(rem,false);if(r)p.push(r);}
   return p.join(' ');
 }
-
 function formatNum(n) { return n.toLocaleString('ru-RU'); }
 
 // ─── Предпросмотр цены ───────────────────────────────────────────────────
 function updatePrice() {
-  const raw     = document.getElementById('price').value.replace(/\D/g,'');
-  const tax     = document.getElementById('addTax').checked;
+  const raw = document.getElementById('price').value.replace(/\D/g,'');
+  const tax = document.getElementById('addTax').checked;
   const preview = document.getElementById('pricePreview');
   if (!raw) { preview.classList.remove('visible'); return; }
   let price = parseInt(raw, 10);
@@ -489,6 +125,48 @@ function checkField(id) {
   return ok;
 }
 
+// ─── Заполнение DOCX: прямая замена в XML ────────────────────────────────
+// Word разбивает {{переменная}} на несколько XML-фрагментов.
+// Сначала склеиваем эти фрагменты, потом делаем замену.
+
+function escXml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Переводим \n в Word-перенос строки (внутри <w:r>)
+function toXmlVal(str) {
+  return escXml(str).split('\n')
+    .join('</w:t><w:br/><w:t xml:space="preserve">');
+}
+
+function fillDocx(buffer, data) {
+  const zip = new PizZip(buffer);
+  let xml = zip.file('word/document.xml').asText();
+
+  // Шаг 1: склеиваем {{ разбитые XML-тегами (напр. <w:r>{ + <w:r>{)
+  xml = xml.replace(/\{(<[^>]*>)*\{/g, '{{');
+  // Шаг 2: склеиваем }}
+  xml = xml.replace(/\}(<[^>]*>)*\}/g, '}}');
+  // Шаг 3: убираем XML-теги внутри {{ ... }} (мог остаться тег переноса)
+  xml = xml.replace(/\{\{[\s\S]*?\}\}/g, m => m.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim());
+
+  // Шаг 4: заменяем каждую переменную
+  for (const [key, val] of Object.entries(data)) {
+    const re = new RegExp('\\{\\{\\s*' + key.replace(/_/g, '[_\\s]') + '\\s*\\}\\}', 'g');
+    xml = xml.replace(re, toXmlVal(val));
+  }
+
+  zip.file('word/document.xml', xml);
+  return zip.generate({
+    type: 'blob',
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  });
+}
+
 // ─── Константы клиента ───────────────────────────────────────────────────
 const CLIENT_EMPTY   = '_________________________________________________________________________\n___________________________________________________________________________________________________________________________________________________________________________________________';
 const CLIENT_EMPTY_2 = '\n\n\n\n';
@@ -496,7 +174,7 @@ const CLIENT_EMPTY_2 = '\n\n\n\n';
 // ─── Создание договора ───────────────────────────────────────────────────
 function createContract() {
   if (!templateBuffer) {
-    alert('Шаблон ещё не загружен. Подождите или выберите файл вручную.');
+    alert('Шаблон ещё не загружен. Нажмите на точку в правом нижнем углу чтобы выбрать файл.');
     return;
   }
 
@@ -516,11 +194,8 @@ function createContract() {
     return;
   }
 
-  const hasDate = document.getElementById('hasDate').checked;
-  const date    = hasDate
-    ? (document.getElementById('contractDate').value.trim() || '__________')
-    : '__________';
-
+  const hasDate     = document.getElementById('hasDate').checked;
+  const date        = hasDate ? (document.getElementById('contractDate').value.trim() || '__________') : '__________';
   const contractNum = document.getElementById('contractNumber').value.trim();
   const model       = document.getElementById('engineModel').value.trim();
   const vol         = document.getElementById('engineVolume').value.trim();
@@ -540,72 +215,34 @@ function createContract() {
     const pdate = document.getElementById('passportDate').value.trim();
     const pby   = document.getElementById('passportBy').value.trim();
     const pcode = document.getElementById('passportCode').value.trim();
-    address      = document.getElementById('address').value.trim();
-    clientFull   = `${name}, ${bday} г.р., паспорт ${pnum}, выдан ${pdate} ${pby}, ${pcode}`;
-    clientFull2  = clientFull;
+    address     = document.getElementById('address').value.trim();
+    clientFull  = `${name}, ${bday} г.р., паспорт ${pnum}, выдан ${pdate} ${pby}, ${pcode}`;
+    clientFull2 = clientFull;
   } else {
     clientFull  = CLIENT_EMPTY;
     clientFull2 = CLIENT_EMPTY_2;
     address     = '';
   }
 
-  // Все значения приводим к строкам — никакого undefined
   const data = {
-    contract_num:  String(contractNum  ?? ''),
-    date:          String(date         ?? ''),
-    client_full:   String(clientFull   ?? ''),
-    client_full_2: String(clientFull2  ?? ''),
-    address:       String(address      ?? ''),
-    engine_full:   String(engineFull   ?? ''),
-    engine_number: String(serial       ?? ''),
-    price_full:    String(priceFull    ?? ''),
+    contract_num:  contractNum,
+    date:          date,
+    client_full:   clientFull,
+    client_full_2: clientFull2,
+    address:       address,
+    engine_full:   engineFull,
+    engine_number: serial,
+    price_full:    priceFull,
   };
 
   try {
-    const zip = new PizZip(templateBuffer);
-    const doc = new docxtemplater(zip, {
-      delimiters:  { start: '{{', end: '}}' },
-      linebreaks:  true,
-      nullGetter:  () => '',        // пустая строка вместо undefined
-    });
-
-    doc.render(data);
-
-    const out = doc.getZip().generate({
-      type: 'blob',
-      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    });
     const clientName = hasClient ? document.getElementById('clientName').value.trim() : '';
     const fname = 'Договор_№' + contractNum + (clientName ? '_' + clientName : '') + '.docx';
-    saveAs(out, fname);
-
+    const blob = fillDocx(templateBuffer, data);
+    saveAs(blob, fname);
   } catch (e) {
     console.error(e);
-    // Если ошибка — пробуем ещё раз с однократными скобками (на случай другого шаблона)
-    try {
-      const zip2 = new PizZip(templateBuffer);
-      const doc2 = new docxtemplater(zip2, {
-        linebreaks: true,
-        nullGetter: () => '',
-      });
-      doc2.render(data);
-      const out2 = doc2.getZip().generate({
-        type: 'blob',
-        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-      });
-      const clientName = hasClient ? document.getElementById('clientName').value.trim() : '';
-      const fname = 'Договор_№' + contractNum + (clientName ? '_' + clientName : '') + '.docx';
-      saveAs(out2, fname);
-    } catch (e2) {
-      console.error(e2);
-      let msg = 'Ошибка при заполнении шаблона:\n';
-      if (e.properties && e.properties.errors) {
-        msg += e.properties.errors.map(x => x.message).join('\n');
-      } else {
-        msg += e.message;
-      }
-      alert(msg);
-    }
+    alert('Ошибка при заполнении шаблона:\n' + e.message);
   }
 }
 </script>
