@@ -532,8 +532,9 @@ function generate() {
   const engineFull  = document.getElementById('model').value.trim() + ' ' + document.getElementById('vol').value.trim() + ' л';
   const engineNum   = document.getElementById('serial').value.trim();
 
-  const price = calcPrice();
-  const priceFull = fmt(price) + ' (' + toWords(price) + ')';
+  const priceVal  = calcPrice();
+  const priceStr  = fmt(priceVal) + ' (' + toWords(priceVal) + ')';
+  const engineMod = document.getElementById('model').value.trim();
 
   let clientFull, clientFull2, address;
 
@@ -559,18 +560,22 @@ function generate() {
       delimiters:    { start: '{{', end: '}}' },
       paragraphLoop: true,
       linebreaks:    true,
+      nullGetter:    () => '',
     });
 
-    doc.render({
-      contract_num:  contractNum,
-      date:          date,
-      client_full:   clientFull,
-      client_full_2: clientFull2,
-      address:       address,
-      engine_full:   engineFull,
-      engine_number: engineNum,
-      price_full:    priceFull,
-    });
+    const data = {
+      contract_num:  String(contractNum ?? ''),
+      date:          String(date        ?? ''),
+      client_full:   String(clientFull  ?? ''),
+      client_full_2: String(clientFull2 ?? ''),
+      address:       String(address     ?? ''),
+      engine_full:   String(engineFull  ?? ''),
+      engine:        String(engineMod   ?? ''),
+      engine_number: String(engineNum   ?? ''),
+      price:         String(priceStr    ?? ''),
+    };
+
+    doc.render(data);
 
     const blob = doc.getZip().generate({
       type: 'blob',
