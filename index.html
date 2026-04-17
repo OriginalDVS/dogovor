@@ -129,66 +129,31 @@
   .err-msg { font-size: 0.75rem; color: #ef4444; display: none; }
   .err-msg.visible { display: block; }
 
-  /* Статус шаблона */
-  .tpl-status {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 1px solid #2a3548;
-    background: #0f1623;
-    flex: 1 1 100%;
-    font-size: 0.875rem;
+  /* Точка статуса шаблона */
+  .tpl-dot {
+    position: fixed;
+    bottom: 18px;
+    right: 22px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #475569;
+    cursor: default;
+    z-index: 999;
+    transition: background 0.4s;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.4);
+  }
+  .tpl-dot.loading { background: #f59e0b; animation: pulse 1.2s infinite; }
+  .tpl-dot.ok      { background: #22c55e; cursor: default; }
+  .tpl-dot.fail    { background: #ef4444; cursor: pointer; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
   }
 
-  .tpl-status.loading { color: #94a3b8; border-color: #2a3548; }
-  .tpl-status.ok      { color: #22c55e; border-color: #166534; background: rgba(34,197,94,0.06); }
-  .tpl-status.fail    { color: #f87171; border-color: #7f1d1d; background: rgba(239,68,68,0.06); }
-
-  .tpl-status svg {
-    width: 16px; height: 16px;
-    stroke: currentColor; fill: none;
-    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-    flex-shrink: 0;
-  }
-
-  /* Выбор файла вручную (fallback) */
-  .file-fallback {
-    display: none;
-    flex: 1 1 100%;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .file-fallback.visible { display: flex; }
-
-  .file-fallback label.field-label { color: #f87171; }
-
-  input[type="file"] {
-    background: #0f1623;
-    border: 1px dashed #4a3a10;
-    border-radius: 8px;
-    padding: 10px 14px;
-    color: #94a3b8;
-    font-size: 0.875rem;
-    font-family: inherit;
-    cursor: pointer;
-    width: 100%;
-  }
-
-  input[type="file"]::-webkit-file-upload-button {
-    background: #f59e0b;
-    color: #0f1623;
-    border: none;
-    border-radius: 6px;
-    padding: 4px 12px;
-    font-family: inherit;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    margin-right: 10px;
-  }
+  /* Скрытый input для fallback */
+  #manualFile { display: none; }
 
   .price-preview {
     display: none;
@@ -240,24 +205,8 @@
   <h1>Генератор договоров</h1>
   <p class="subtitle">Оформление продажи двигателей</p>
 
-  <!-- Шаблон -->
-  <div class="section">
-    <div class="section-header">
-      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Шаблон договора
-    </div>
-    <div class="section-body">
-      <div class="tpl-status loading" id="tplStatus">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span id="tplStatusText">Загрузка shablon_dogovora.docx…</span>
-      </div>
-      <!-- Fallback: ручной выбор если fetch не сработал -->
-      <div class="file-fallback" id="fileFallback">
-        <label class="field-label">Выберите shablon_dogovora.docx вручную:</label>
-        <input type="file" id="manualFile" accept=".docx" onchange="onManualFile(this)">
-      </div>
-    </div>
-  </div>
+  <!-- Скрытый input для ручного выбора шаблона -->
+  <input type="file" id="manualFile" accept=".docx" onchange="onManualFile(this)">
 
   <!-- Реквизиты -->
   <div class="section">
@@ -406,38 +355,50 @@
   </button>
 </div>
 
+<!-- Точка статуса шаблона (красная = нет шаблона, нажми чтобы выбрать; зелёная = загружен) -->
+<div class="tpl-dot loading" id="tplDot" title="Шаблон не загружен — нажмите чтобы выбрать файл" onclick="dotClick()"></div>
+
 <script>
 // ─── Загрузка шаблона ────────────────────────────────────────────────────
 let templateBuffer = null;
 
-async function loadTemplate() {
-  const status    = document.getElementById('tplStatus');
-  const statusTxt = document.getElementById('tplStatusText');
-  const fallback  = document.getElementById('fileFallback');
+function setDot(state) {
+  const dot = document.getElementById('tplDot');
+  dot.className = 'tpl-dot ' + state;
+  if (state === 'fail') {
+    dot.title = 'Шаблон не загружен — нажмите чтобы выбрать файл';
+  } else if (state === 'ok') {
+    dot.title = 'Шаблон загружен';
+  } else {
+    dot.title = '';
+  }
+}
 
+function dotClick() {
+  if (!templateBuffer) {
+    document.getElementById('manualFile').click();
+  }
+}
+
+async function loadTemplate() {
+  setDot('loading');
   try {
     const resp = await fetch('./shablon_dogovora.docx');
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     templateBuffer = await resp.arrayBuffer();
-    status.className    = 'tpl-status ok';
-    status.innerHTML    = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Шаблон shablon_dogovora.docx загружен`;
+    setDot('ok');
   } catch (e) {
-    status.className = 'tpl-status fail';
-    status.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Не удалось загрузить шаблон автоматически`;
-    fallback.classList.add('visible');
+    setDot('fail');
   }
 }
 
 function onManualFile(input) {
-  const file   = input.files[0];
+  const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
     templateBuffer = e.target.result;
-    const status = document.getElementById('tplStatus');
-    status.className = 'tpl-status ok';
-    status.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Шаблон выбран: ${file.name}`;
-    document.getElementById('fileFallback').classList.remove('visible');
+    setDot('ok');
   };
   reader.readAsArrayBuffer(file);
 }
