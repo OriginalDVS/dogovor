@@ -3,364 +3,564 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Генератор договоров Kia/Hyundai</title>
+<title>Генератор договоров</title>
 <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.44.0/build/docxtemplater.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f1623; color: #e2e8f0; min-height: 100vh; padding: 40px 16px 60px; }
-  h1 { text-align: center; font-size: 2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 6px; letter-spacing: -0.5px; }
-  .subtitle { text-align: center; color: #64748b; font-size: 1rem; margin-bottom: 36px; }
-  .container { max-width: 740px; margin: 0 auto; }
-  .section { background: #1a2233; border: 1px solid #2a3548; border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
-  .section-header { display: flex; align-items: center; gap: 10px; padding: 18px 24px 14px; border-bottom: 1px solid #2a3548; color: #f59e0b; font-weight: 600; font-size: 1rem; }
-  .section-header svg { width: 18px; height: 18px; stroke: #f59e0b; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
-  .section-body { padding: 20px 24px 24px; display: flex; flex-wrap: wrap; gap: 16px; }
-  .field { display: flex; flex-direction: column; gap: 6px; flex: 1 1 220px; }
-  .field.full { flex: 1 1 100%; }
-  label.field-label { font-size: 0.825rem; font-weight: 500; color: #94a3b8; }
-  input[type="text"] { background: #0f1623; border: 1px solid #2a3548; border-radius: 8px; padding: 10px 14px; color: #f1f5f9; font-size: 0.9rem; outline: none; transition: border-color 0.2s; width: 100%; font-family: inherit; }
-  input[type="text"]:focus { border-color: #f59e0b; }
-  input[type="text"].error { border-color: #ef4444; }
-  input::placeholder { color: #3d4f6a; }
-  .toggle-row { display: flex; align-items: center; gap: 10px; background: #0f1623; border: 1px solid #2a3548; border-radius: 8px; padding: 10px 14px; cursor: pointer; user-select: none; transition: border-color 0.2s; flex: 1 1 auto; }
-  .toggle-row:hover { border-color: #3d4f6a; }
-  .toggle-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: #f59e0b; cursor: pointer; flex-shrink: 0; }
-  .toggle-row span { color: #94a3b8; font-size: 0.9rem; }
-  .err-msg { font-size: 0.75rem; color: #ef4444; display: none; }
-  .err-msg.visible { display: block; }
-  .tpl-dot { position: fixed; bottom: 18px; right: 22px; width: 10px; height: 10px; border-radius: 50%; background: #475569; cursor: default; z-index: 999; transition: background 0.4s; box-shadow: 0 0 0 2px rgba(0,0,0,0.4); }
-  .tpl-dot.loading { background: #f59e0b; animation: pulse 1.2s infinite; }
-  .tpl-dot.ok { background: #22c55e; cursor: default; }
-  .tpl-dot.fail { background: #ef4444; cursor: pointer; }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-  #manualFile { display: none; }
-  .price-preview { display: none; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 14px 16px; flex: 1 1 100%; }
-  .price-preview.visible { display: block; }
-  .price-preview .plabel { font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px; }
-  .price-preview .pvalue { font-size: 1rem; font-weight: 600; color: #f59e0b; }
-  .btn-create { width: 100%; height: 56px; background: #f59e0b; color: #0f1623; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; letter-spacing: 0.5px; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: background 0.2s, transform 0.1s; }
-  .btn-create:hover { background: #d97706; }
-  .btn-create:active { transform: scale(0.99); }
-  .btn-create svg { width: 20px; height: 20px; stroke: #0f1623; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-  @media (max-width: 600px) { h1 { font-size: 1.5rem; } .field { flex: 1 1 100%; } .section-body { padding: 16px; gap: 14px; } }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #0f1623;
+  color: #e2e8f0;
+  min-height: 100vh;
+  padding: 48px 16px 80px;
+}
+
+.wrap {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+h1 {
+  text-align: center;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin-bottom: 6px;
+}
+
+.sub {
+  text-align: center;
+  color: #64748b;
+  margin-bottom: 40px;
+}
+
+/* ── Карточка ── */
+.card {
+  background: #1a2233;
+  border: 1px solid #2a3548;
+  border-radius: 14px;
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 22px;
+  border-bottom: 1px solid #2a3548;
+  color: #f59e0b;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.card-head svg {
+  width: 17px; height: 17px;
+  stroke: #f59e0b; fill: none;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.card-body {
+  padding: 20px 22px 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+/* ── Поля ── */
+.f { display: flex; flex-direction: column; gap: 5px; flex: 1 1 200px; }
+.f.wide { flex: 1 1 100%; }
+
+.f > span {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+input[type="text"] {
+  background: #0f1623;
+  border: 1px solid #2a3548;
+  border-radius: 8px;
+  padding: 9px 13px;
+  color: #f1f5f9;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+
+input[type="text"]:focus { border-color: #f59e0b; }
+input[type="text"].err   { border-color: #ef4444; }
+input::placeholder       { color: #3d4f6a; }
+
+/* ── Переключатель ── */
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #0f1623;
+  border: 1px solid #2a3548;
+  border-radius: 8px;
+  padding: 9px 13px;
+  cursor: pointer;
+  user-select: none;
+  flex: 1 1 auto;
+  transition: border-color 0.2s;
+}
+
+.toggle:hover { border-color: #3d5070; }
+
+.toggle input[type="checkbox"] {
+  width: 15px; height: 15px;
+  accent-color: #f59e0b;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toggle span { color: #94a3b8; font-size: 0.9rem; }
+
+/* ── Сообщение об ошибке ── */
+.errtxt { font-size: 0.75rem; color: #ef4444; display: none; }
+.errtxt.show { display: block; }
+
+/* ── Предпросмотр цены ── */
+.price-hint {
+  display: none;
+  width: 100%;
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: 8px;
+  padding: 12px 15px;
+}
+
+.price-hint.show { display: block; }
+.price-hint .lbl { font-size: 0.78rem; color: #94a3b8; margin-bottom: 3px; }
+.price-hint .val { font-size: 0.95rem; font-weight: 600; color: #f59e0b; }
+
+/* ── Кнопка ── */
+.btn {
+  width: 100%;
+  height: 54px;
+  background: #f59e0b;
+  color: #0f1623;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  transition: background 0.18s, transform 0.1s;
+  margin-top: 6px;
+}
+
+.btn:hover  { background: #d97706; }
+.btn:active { transform: scale(0.99); }
+
+.btn svg {
+  width: 19px; height: 19px;
+  stroke: #0f1623; fill: none;
+  stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ── Точка шаблона ── */
+.dot {
+  position: fixed;
+  bottom: 18px;
+  right: 20px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #475569;
+  cursor: default;
+  z-index: 999;
+  transition: background 0.4s;
+  box-shadow: 0 0 0 2px #0f1623;
+}
+
+.dot.loading { background: #f59e0b; animation: blink 1.2s infinite; }
+.dot.ok      { background: #22c55e; }
+.dot.fail    { background: #ef4444; cursor: pointer; }
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+/* ── Скрытый input файла ── */
+#fileInput { display: none; }
+
+@media (max-width: 580px) {
+  h1 { font-size: 1.5rem; }
+  .f { flex: 1 1 100%; }
+  .card-body { padding: 16px; }
+}
 </style>
 </head>
 <body>
-<div class="container">
+<input type="file" id="fileInput" accept=".docx" onchange="onFilePick(this)">
+<div class="dot loading" id="dot" title="" onclick="onDotClick()"></div>
+
+<div class="wrap">
   <h1>Генератор договоров</h1>
-  <p class="subtitle">Оформление продажи двигателей</p>
+  <p class="sub">Оформление продажи двигателей</p>
 
-  <input type="file" id="manualFile" accept=".docx" onchange="onManualFile(this)">
-
-  <div class="section">
-    <div class="section-header">
-      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+  <!-- Реквизиты -->
+  <div class="card">
+    <div class="card-head">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
       Реквизиты договора
     </div>
-    <div class="section-body">
-      <div class="field">
-        <label class="field-label" for="contractNumber">Номер договора</label>
-        <input type="text" id="contractNumber" placeholder="Например: 12-А">
-        <span class="err-msg" id="err-contractNumber">Введите номер договора</span>
+    <div class="card-body">
+
+      <div class="f">
+        <span>Номер договора</span>
+        <input type="text" id="num" placeholder="Например: 12-А">
+        <small class="errtxt" id="e-num">Введите номер договора</small>
       </div>
-      <div class="field">
-        <label class="field-label">Дата договора</label>
-        <label class="toggle-row" for="hasDate">
-          <input type="checkbox" id="hasDate" onchange="toggleDate()">
+
+      <div class="f">
+        <span>Дата договора</span>
+        <label class="toggle" for="cbDate">
+          <input type="checkbox" id="cbDate" onchange="toggleDate()">
           <span>Указать дату</span>
         </label>
-        <div id="dateInputWrap" style="display:none; margin-top:8px;">
-          <input type="text" id="contractDate" placeholder="17.04.2026">
+        <div id="dateWrap" style="display:none; margin-top:4px;">
+          <input type="text" id="date" placeholder="17.04.2026">
         </div>
       </div>
+
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-header">
+  <!-- Клиент -->
+  <div class="card">
+    <div class="card-head">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Данные клиента
     </div>
-    <div class="section-body">
-      <div class="field full">
-        <label class="toggle-row" for="hasClient">
-          <input type="checkbox" id="hasClient" onchange="toggleClient()">
+    <div class="card-body">
+
+      <div class="f wide">
+        <label class="toggle" for="cbClient">
+          <input type="checkbox" id="cbClient" onchange="toggleClient()">
           <span>Указать данные клиента</span>
         </label>
       </div>
-      <div id="clientFields" style="display:none; width:100%;">
-        <div style="display:flex; flex-wrap:wrap; gap:16px;">
-          <div class="field full">
-            <label class="field-label" for="clientName">ФИО Клиента</label>
-            <input type="text" id="clientName" placeholder="Иванов Иван Иванович">
-            <span class="err-msg" id="err-clientName">Введите ФИО клиента</span>
+
+      <div id="clientWrap" style="display:none; width:100%;">
+        <div style="display:flex; flex-wrap:wrap; gap:14px;">
+
+          <div class="f wide">
+            <span>ФИО клиента</span>
+            <input type="text" id="name" placeholder="Иванов Иван Иванович">
+            <small class="errtxt" id="e-name">Введите ФИО клиента</small>
           </div>
-          <div class="field">
-            <label class="field-label" for="clientBirthDate">Дата рождения</label>
-            <input type="text" id="clientBirthDate" placeholder="14.09.1985">
-            <span class="err-msg" id="err-clientBirthDate">Введите дату рождения</span>
+
+          <div class="f">
+            <span>Дата рождения</span>
+            <input type="text" id="bday" placeholder="14.09.1985">
+            <small class="errtxt" id="e-bday">Введите дату рождения</small>
           </div>
-          <div class="field">
-            <label class="field-label" for="passportNumber">Серия и номер паспорта</label>
-            <input type="text" id="passportNumber" placeholder="1234 567890">
-            <span class="err-msg" id="err-passportNumber">Введите серию и номер</span>
+
+          <div class="f">
+            <span>Серия и номер паспорта</span>
+            <input type="text" id="pnum" placeholder="1234 567890">
+            <small class="errtxt" id="e-pnum">Введите серию и номер</small>
           </div>
-          <div class="field">
-            <label class="field-label" for="passportDate">Дата выдачи паспорта</label>
-            <input type="text" id="passportDate" placeholder="20.10.2010">
-            <span class="err-msg" id="err-passportDate">Введите дату выдачи</span>
+
+          <div class="f">
+            <span>Дата выдачи паспорта</span>
+            <input type="text" id="pdate" placeholder="20.10.2010">
+            <small class="errtxt" id="e-pdate">Введите дату выдачи</small>
           </div>
-          <div class="field">
-            <label class="field-label" for="passportCode">Код подразделения</label>
-            <input type="text" id="passportCode" placeholder="123-456">
-            <span class="err-msg" id="err-passportCode">Введите код</span>
+
+          <div class="f">
+            <span>Код подразделения</span>
+            <input type="text" id="pcode" placeholder="123-456">
+            <small class="errtxt" id="e-pcode">Введите код</small>
           </div>
-          <div class="field full">
-            <label class="field-label" for="passportBy">Кем выдан паспорт</label>
-            <input type="text" id="passportBy" placeholder="Отделом УФМС России по г. Москве">
-            <span class="err-msg" id="err-passportBy">Укажите кем выдан паспорт</span>
+
+          <div class="f wide">
+            <span>Кем выдан паспорт</span>
+            <input type="text" id="pby" placeholder="Отделом УФМС России по г. Москве">
+            <small class="errtxt" id="e-pby">Укажите кем выдан паспорт</small>
           </div>
-          <div class="field full">
-            <label class="field-label" for="address">Адрес регистрации</label>
-            <input type="text" id="address" placeholder="г. Москва, ул. Ленина, д. 1, кв. 1">
-            <span class="err-msg" id="err-address">Введите адрес регистрации</span>
+
+          <div class="f wide">
+            <span>Адрес регистрации</span>
+            <input type="text" id="addr" placeholder="г. Москва, ул. Ленина, д. 1, кв. 1">
+            <small class="errtxt" id="e-addr">Введите адрес регистрации</small>
           </div>
+
         </div>
       </div>
+
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-header">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+  <!-- Двигатель -->
+  <div class="card">
+    <div class="card-head">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M17.66 6.34l-1.41 1.41M6.34 17.66l-1.41 1.41"/></svg>
       Характеристики двигателя
     </div>
-    <div class="section-body">
-      <div class="field">
-        <label class="field-label" for="engineModel">Модель двигателя</label>
-        <input type="text" id="engineModel" list="engine-models" placeholder="Выберите или введите...">
-        <datalist id="engine-models">
+    <div class="card-body">
+
+      <div class="f">
+        <span>Модель двигателя</span>
+        <input type="text" id="model" list="models" placeholder="Выберите или введите...">
+        <datalist id="models">
           <option value="G4FA"><option value="G4FC"><option value="G4FG">
           <option value="G4NA"><option value="G4KD"><option value="G4KE">
         </datalist>
-        <span class="err-msg" id="err-engineModel">Укажите модель двигателя</span>
+        <small class="errtxt" id="e-model">Укажите модель двигателя</small>
       </div>
-      <div class="field">
-        <label class="field-label" for="engineVolume">Объем двигателя</label>
-        <input type="text" id="engineVolume" list="engine-volumes" placeholder="Выберите или введите...">
-        <datalist id="engine-volumes">
+
+      <div class="f">
+        <span>Объём двигателя</span>
+        <input type="text" id="vol" list="vols" placeholder="Выберите или введите...">
+        <datalist id="vols">
           <option value="0.8"><option value="1.4"><option value="1.6">
           <option value="1.8"><option value="2.0"><option value="2.4">
         </datalist>
-        <span class="err-msg" id="err-engineVolume">Укажите объем двигателя</span>
+        <small class="errtxt" id="e-vol">Укажите объём двигателя</small>
       </div>
-      <div class="field">
-        <label class="field-label" for="engineSerial">Заводской номер двигателя</label>
-        <input type="text" id="engineSerial" placeholder="XXXXXX">
-        <span class="err-msg" id="err-engineSerial">Введите заводской номер</span>
+
+      <div class="f">
+        <span>Заводской номер</span>
+        <input type="text" id="serial" placeholder="XXXXXX">
+        <small class="errtxt" id="e-serial">Введите заводской номер</small>
       </div>
+
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-header">
-      <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+  <!-- Стоимость -->
+  <div class="card">
+    <div class="card-head">
+      <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
       Стоимость
     </div>
-    <div class="section-body">
-      <div class="field">
-        <label class="field-label" for="price">Сумма (₽)</label>
-        <input type="text" id="price" list="price-list" placeholder="Укажите сумму" oninput="updatePrice()">
-        <datalist id="price-list">
+    <div class="card-body">
+
+      <div class="f">
+        <span>Сумма (₽)</span>
+        <input type="text" id="price" list="prices" placeholder="Укажите сумму" oninput="updatePreview()">
+        <datalist id="prices">
           <option value="75000"><option value="105000"><option value="115000">
           <option value="125000"><option value="129000"><option value="135000">
           <option value="170000"><option value="180000">
         </datalist>
-        <span class="err-msg" id="err-price">Введите корректную сумму</span>
+        <small class="errtxt" id="e-price">Введите корректную сумму</small>
       </div>
-      <label class="toggle-row" style="align-self:flex-end; padding:10px 14px;">
-        <input type="checkbox" id="addTax" onchange="updatePrice()">
+
+      <label class="toggle" for="cbTax" style="align-self:flex-end;">
+        <input type="checkbox" id="cbTax" onchange="updatePreview()">
         <span>Добавить +7% к сумме</span>
       </label>
-      <div class="price-preview" id="pricePreview">
-        <div class="plabel">Итоговая сумма прописью:</div>
-        <div class="pvalue" id="pricePreviewValue"></div>
+
+      <div class="price-hint" id="priceHint">
+        <div class="lbl">Итоговая сумма прописью:</div>
+        <div class="val" id="priceVal"></div>
       </div>
+
     </div>
   </div>
 
-  <button class="btn-create" onclick="createContract()">
-    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+  <button class="btn" onclick="generate()">
+    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     СОЗДАТЬ ДОГОВОР И СКАЧАТЬ
   </button>
 </div>
 
-<div class="tpl-dot loading" id="tplDot" title="Шаблон не загружен" onclick="dotClick()"></div>
-
 <script>
-// --- Загрузка шаблона ---
-let templateBuffer = null;
+// ─── Шаблон ──────────────────────────────────────────────────────────────────
+let tplBuffer = null;
 
 function setDot(state) {
-  const dot = document.getElementById('tplDot');
-  dot.className = 'tpl-dot ' + state;
-  if (state === 'fail') dot.title = 'Шаблон не загружен — нажмите чтобы выбрать файл';
-  else if (state === 'ok') dot.title = 'Шаблон загружен';
-  else dot.title = '';
+  const d = document.getElementById('dot');
+  d.className = 'dot ' + state;
+  d.title = state === 'fail' ? 'Шаблон не найден — нажмите чтобы выбрать' :
+            state === 'ok'   ? 'Шаблон загружен' : '';
 }
 
-function dotClick() {
-  if (!templateBuffer) document.getElementById('manualFile').click();
+function onDotClick() {
+  if (!tplBuffer) document.getElementById('fileInput').click();
+}
+
+function onFilePick(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = e => { tplBuffer = e.target.result; setDot('ok'); };
+  r.readAsArrayBuffer(file);
 }
 
 async function loadTemplate() {
   setDot('loading');
   try {
-    const resp = await fetch('./shablon_dogovora.docx');
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    templateBuffer = await resp.arrayBuffer();
+    const r = await fetch('./shablon_dogovora.docx');
+    if (!r.ok) throw 0;
+    tplBuffer = await r.arrayBuffer();
     setDot('ok');
-  } catch (e) {
+  } catch {
     setDot('fail');
   }
 }
 
-function onManualFile(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    templateBuffer = e.target.result;
-    setDot('ok');
-  };
-  reader.readAsArrayBuffer(file);
-}
-
 loadTemplate();
 
-// --- Интерфейс ---
+// ─── Переключатели ───────────────────────────────────────────────────────────
 function toggleDate() {
-  document.getElementById('dateInputWrap').style.display = document.getElementById('hasDate').checked ? 'block' : 'none';
+  document.getElementById('dateWrap').style.display =
+    document.getElementById('cbDate').checked ? 'block' : 'none';
 }
 
 function toggleClient() {
-  const on = document.getElementById('hasClient').checked;
-  document.getElementById('clientFields').style.display = on ? 'block' : 'none';
-  if (!on) {
-    ['clientName','clientBirthDate','passportNumber','passportDate','passportCode','passportBy','address'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.remove('error');
-      const err = document.getElementById('err-' + id);
-      if (err) err.classList.remove('visible');
-    });
+  document.getElementById('clientWrap').style.display =
+    document.getElementById('cbClient').checked ? 'block' : 'none';
+  if (!document.getElementById('cbClient').checked) {
+    ['name','bday','pnum','pdate','pcode','pby','addr'].forEach(clearErr);
   }
 }
 
-// --- Число прописью (Ваш оригинальный код) ---
-const ones  = ['','один','два','три','четыре','пять','шесть','семь','восемь','девять','десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать','шестнадцать','семнадцать','восемнадцать','девятнадцать'];
-const tens  = ['','','двадцать','тридцать','сорок','пятьдесят','шестьдесят','семьдесят','восемьдесят','девяносто'];
-const hunds = ['','сто','двести','триста','четыреста','пятьсот','шестьсот','семьсот','восемьсот','девятьсот'];
-const onesF = ['','одна','две','три','четыре','пять','шесть','семь','восемь','девять','десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать','шестнадцать','семнадцать','восемнадцать','девятнадцать'];
+// ─── Число прописью ──────────────────────────────────────────────────────────
+const RU = {
+  ones:  ['','один','два','три','четыре','пять','шесть','семь','восемь','девять',
+          'десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать',
+          'шестнадцать','семнадцать','восемнадцать','девятнадцать'],
+  onesF: ['','одна','две','три','четыре','пять','шесть','семь','восемь','девять',
+          'десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать',
+          'шестнадцать','семнадцать','восемнадцать','девятнадцать'],
+  tens:  ['','','двадцать','тридцать','сорок','пятьдесят','шестьдесят','семьдесят','восемьдесят','девяносто'],
+  hunds: ['','сто','двести','триста','четыреста','пятьсот','шестьсот','семьсот','восемьсот','девятьсот'],
+};
 
-function threeDigits(n, fem) {
+function tri(n, fem) {
   if (!n) return '';
-  let h = Math.floor(n/100), rest = n%100, t = Math.floor(rest/10), o = rest%10, p = [];
-  if (h) p.push(hunds[h]);
-  if (rest < 20) { if (rest) p.push(fem ? onesF[rest] : ones[rest]); }
-  else { if (t) p.push(tens[t]); if (o) p.push(fem ? onesF[o] : ones[o]); }
+  const h = Math.floor(n / 100), rest = n % 100, t = Math.floor(rest / 10), o = rest % 10;
+  const p = [];
+  if (h) p.push(RU.hunds[h]);
+  if (rest < 20) { if (rest) p.push(fem ? RU.onesF[rest] : RU.ones[rest]); }
+  else { if (t) p.push(RU.tens[t]); if (o) p.push(fem ? RU.onesF[o] : RU.ones[o]); }
   return p.join(' ');
 }
 
-function thousandWord(n) {
-  let l2 = n%100, l1 = n%10;
-  if (l2>=11 && l2<=19) return 'тысяч';
-  if (l1===1) return 'тысяча';
-  if (l1>=2 && l1<=4) return 'тысячи';
+function thouWord(n) {
+  const l2 = n % 100, l1 = n % 10;
+  if (l2 >= 11 && l2 <= 19) return 'тысяч';
+  if (l1 === 1) return 'тысяча';
+  if (l1 >= 2 && l1 <= 4) return 'тысячи';
   return 'тысяч';
 }
 
-function numToWords(n) {
+function toWords(n) {
   if (!n) return 'ноль';
-  let p = [], th = Math.floor(n/1000), rem = n%1000;
-  if (th) { let t = threeDigits(th,true); if(t) p.push(t); p.push(thousandWord(th)); }
-  if (rem) { let r = threeDigits(rem,false); if(r) p.push(r); }
+  const p = [], th = Math.floor(n / 1000), rem = n % 1000;
+  if (th) { const t = tri(th, true); if (t) p.push(t); p.push(thouWord(th)); }
+  if (rem) { const r = tri(rem, false); if (r) p.push(r); }
   return p.join(' ');
 }
 
-function formatNum(n) { return n.toLocaleString('ru-RU'); }
+function fmt(n) { return n.toLocaleString('ru-RU'); }
 
-function updatePrice() {
-  const raw = document.getElementById('price').value.replace(/\D/g,'');
-  const tax = document.getElementById('addTax').checked;
-  const preview = document.getElementById('pricePreview');
-  if (!raw) { preview.classList.remove('visible'); return; }
-  let price = parseInt(raw, 10);
-  if (tax) price = Math.round(price * 1.07);
-  preview.classList.add('visible');
-  document.getElementById('pricePreviewValue').textContent = formatNum(price) + ' (' + numToWords(price) + ') рублей';
+function calcPrice() {
+  const raw = document.getElementById('price').value.replace(/\D/g, '');
+  if (!raw) return null;
+  let p = parseInt(raw, 10);
+  if (document.getElementById('cbTax').checked) p = Math.round(p * 1.07);
+  return p;
 }
 
-// --- Создание договора ---
-const CLIENT_EMPTY   = '_________________________________________________________________________\n___________________________________________________________________________________________________________________________________________________________________________________________';
-const CLIENT_EMPTY_2 = '\n\n\n\n';
+function updatePreview() {
+  const p = calcPrice();
+  const hint = document.getElementById('priceHint');
+  if (!p) { hint.classList.remove('show'); return; }
+  document.getElementById('priceVal').textContent = fmt(p) + ' (' + toWords(p) + ') рублей';
+  hint.classList.add('show');
+}
 
-function createContract() {
-  if (!templateBuffer) {
-    alert('Шаблон ещё не загружен. Подождите или выберите файл вручную.');
+// ─── Валидация ───────────────────────────────────────────────────────────────
+function check(id) {
+  const el = document.getElementById(id);
+  const ok = el && el.value.trim() !== '';
+  if (el) el.classList.toggle('err', !ok);
+  const e = document.getElementById('e-' + id);
+  if (e) e.classList.toggle('show', !ok);
+  return ok;
+}
+
+function clearErr(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('err');
+  const e = document.getElementById('e-' + id);
+  if (e) e.classList.remove('show');
+}
+
+// ─── Генерация ───────────────────────────────────────────────────────────────
+const EMPTY_FULL = '_________________________________________________________________________\n___________________________________________________________________________________________________________________________________________________________________________________________';
+const EMPTY_FULL2 = '\n\n\n\n';
+
+function generate() {
+  if (!tplBuffer) {
+    alert('Шаблон ещё не загружен. Нажмите на точку в правом нижнем углу и выберите shablon_dogovora.docx');
     return;
   }
 
-  // Защита от undefined: если поле пустое, берется пустая строка ""
-  const getV = (id) => {
-    const el = document.getElementById(id);
-    return el ? (el.value.trim() || "") : "";
-  };
+  let ok = true;
+  ['num', 'model', 'vol', 'serial', 'price'].forEach(id => { if (!check(id)) ok = false; });
 
-  const hasDate = document.getElementById('hasDate').checked;
-  const date = hasDate ? (getV('contractDate') || "__________") : "__________";
+  const withClient = document.getElementById('cbClient').checked;
+  if (withClient) {
+    ['name','bday','pnum','pdate','pcode','pby','addr'].forEach(id => { if (!check(id)) ok = false; });
+  }
 
-  const contractNum = getV('contractNumber') || "___";
-  const model       = getV('engineModel');
-  const vol         = getV('engineVolume');
-  const serial      = getV('engineSerial') || "________________";
-  const engineFull  = (model || vol) ? `${model} ${vol} л`.trim() : "________________";
+  if (!ok) return;
 
-  const priceVal    = getV('price').replace(/\D/g,'');
-  const rawPrice    = priceVal ? parseInt(priceVal, 10) : 0;
-  const tax         = document.getElementById('addTax').checked;
-  const finalPrice  = tax ? Math.round(rawPrice * 1.07) : rawPrice;
-  const priceFull   = finalPrice > 0 ? formatNum(finalPrice) + ' (' + numToWords(finalPrice) + ')' : "________________";
+  const withDate = document.getElementById('cbDate').checked;
+  const date = withDate ? (document.getElementById('date').value.trim() || '__________') : '__________';
+
+  const contractNum = document.getElementById('num').value.trim();
+  const engineFull  = document.getElementById('model').value.trim() + ' ' + document.getElementById('vol').value.trim() + ' л';
+  const engineNum   = document.getElementById('serial').value.trim();
+
+  const price = calcPrice();
+  const priceFull = fmt(price) + ' (' + toWords(price) + ')';
 
   let clientFull, clientFull2, address;
-  if (document.getElementById('hasClient').checked) {
-    const name  = getV('clientName');
-    const bday  = getV('clientBirthDate');
-    const pnum  = getV('passportNumber');
-    const pdate = getV('passportDate');
-    const pby   = getV('passportBy');
-    const pcode = getV('passportCode');
-    address     = getV('address');
-    
-    // Формируем строку клиента
+
+  if (withClient) {
+    const name  = document.getElementById('name').value.trim();
+    const bday  = document.getElementById('bday').value.trim();
+    const pnum  = document.getElementById('pnum').value.trim();
+    const pdate = document.getElementById('pdate').value.trim();
+    const pcode = document.getElementById('pcode').value.trim();
+    const pby   = document.getElementById('pby').value.trim();
+    address     = document.getElementById('addr').value.trim();
     clientFull  = `${name}, ${bday} г.р., паспорт ${pnum}, выдан ${pdate} ${pby}, ${pcode}`;
     clientFull2 = clientFull;
   } else {
-    clientFull  = CLIENT_EMPTY;
-    clientFull2 = CLIENT_EMPTY_2;
-    address     = '_________________________________________________________________________';
+    clientFull  = EMPTY_FULL;
+    clientFull2 = EMPTY_FULL2;
+    address     = '';
   }
 
   try {
-    const zip = new PizZip(templateBuffer);
+    const zip = new PizZip(tplBuffer);
     const doc = new docxtemplater(zip, {
-      delimiters: { start: '{{', end: '}}' },
+      delimiters:    { start: '{{', end: '}}' },
       paragraphLoop: true,
-      linebreaks: true,
+      linebreaks:    true,
     });
 
-    // Передаем данные в шаблон
     doc.render({
       contract_num:  contractNum,
       date:          date,
@@ -368,29 +568,21 @@ function createContract() {
       client_full_2: clientFull2,
       address:       address,
       engine_full:   engineFull,
-      engine_number: serial,
+      engine_number: engineNum,
       price_full:    priceFull,
     });
 
-    const out = doc.getZip().generate({
+    const blob = doc.getZip().generate({
       type: 'blob',
-      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     });
-    
-    const clientNameStr = document.getElementById('hasClient').checked ? getV('clientName') : '';
-    const fname = 'Договор_№' + contractNum + (clientNameStr ? '_' + clientNameStr : '') + '.docx';
-    saveAs(out, fname);
+
+    const clientName = withClient ? '_' + document.getElementById('name').value.trim() : '';
+    saveAs(blob, `Договор_№${contractNum}${clientName}.docx`);
 
   } catch (e) {
-    // ВАШ оригинальный обработчик ошибок (показывает детальную причину)
     console.error(e);
-    let msg = 'Ошибка при заполнении шаблона.\n';
-    if (e.properties && e.properties.errors) {
-      msg += e.properties.errors.map(x => x.message).join('\n');
-    } else {
-      msg += e.message;
-    }
-    alert(msg);
+    alert('Ошибка при заполнении шаблона:\n' + (e.message || e));
   }
 }
 </script>
