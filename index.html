@@ -34,7 +34,50 @@ h1 {
 .sub {
   text-align: center;
   color: #64748b;
-  margin-bottom: 40px;
+  margin-bottom: 28px;
+}
+
+/* ── Выбор типа договора ── */
+.brand-select {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.brand-btn {
+  flex: 1;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 2px solid #2a3548;
+  background: #1a2233;
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.18s;
+  user-select: none;
+  line-height: 1.4;
+}
+
+.brand-btn:hover { border-color: #3d5070; color: #f1f5f9; }
+
+.brand-btn.active-kia {
+  border-color: #f59e0b;
+  background: rgba(245,158,11,0.08);
+  color: #f59e0b;
+}
+
+.brand-btn.active-vag {
+  border-color: #60a5fa;
+  background: rgba(96,165,250,0.08);
+  color: #60a5fa;
+}
+
+.brand-btn .brand-icon {
+  font-size: 1.4rem;
+  display: block;
+  margin-bottom: 4px;
 }
 
 /* ── Карточка ── */
@@ -56,6 +99,9 @@ h1 {
   font-weight: 600;
   font-size: 0.95rem;
 }
+
+.card-head.vag-mode { color: #60a5fa; }
+.card-head.vag-mode svg { stroke: #60a5fa !important; }
 
 .card-head svg {
   width: 17px; height: 17px;
@@ -95,6 +141,7 @@ input[type="text"] {
 }
 
 input[type="text"]:focus { border-color: #f59e0b; }
+input[type="text"].focus-vag:focus { border-color: #60a5fa; }
 input[type="text"].err   { border-color: #ef4444; }
 input::placeholder       { color: #3d4f6a; }
 
@@ -122,7 +169,58 @@ input::placeholder       { color: #3d4f6a; }
   flex-shrink: 0;
 }
 
+.toggle.vag-accent input[type="checkbox"] { accent-color: #60a5fa; }
+
 .toggle span { color: #94a3b8; font-size: 0.9rem; }
+
+/* ── Термонаклейка: радио-группа ── */
+.termo-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.termo-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #0f1623;
+  border: 1px solid #2a3548;
+  border-radius: 8px;
+  padding: 9px 13px;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.18s, background 0.18s;
+  flex: 1 1 auto;
+  min-width: 130px;
+}
+
+.termo-opt:hover { border-color: #3d5070; }
+.termo-opt.selected-kia {
+  border-color: #f59e0b;
+  background: rgba(245,158,11,0.08);
+}
+.termo-opt.selected-vag {
+  border-color: #60a5fa;
+  background: rgba(96,165,250,0.08);
+}
+
+.termo-opt input[type="radio"] {
+  width: 15px; height: 15px;
+  accent-color: #f59e0b;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.termo-opt input[type="radio"].vag-r { accent-color: #60a5fa; }
+
+.termo-opt span { color: #94a3b8; font-size: 0.9rem; }
+
+#termoCustomWrap {
+  display: none;
+  width: 100%;
+  margin-top: 2px;
+}
 
 /* ── Сообщение об ошибке ── */
 .errtxt { font-size: 0.75rem; color: #ef4444; display: none; }
@@ -139,8 +237,13 @@ input::placeholder       { color: #3d4f6a; }
 }
 
 .price-hint.show { display: block; }
+.price-hint.vag-hint {
+  background: rgba(96,165,250,0.08);
+  border-color: rgba(96,165,250,0.2);
+}
 .price-hint .lbl { font-size: 0.78rem; color: #94a3b8; margin-bottom: 3px; }
 .price-hint .val { font-size: 0.95rem; font-weight: 600; color: #f59e0b; }
+.price-hint.vag-hint .val { color: #60a5fa; }
 
 /* ── Кнопка ── */
 .btn {
@@ -164,6 +267,8 @@ input::placeholder       { color: #3d4f6a; }
 
 .btn:hover  { background: #d97706; }
 .btn:active { transform: scale(0.99); }
+.btn.vag-btn { background: #60a5fa; }
+.btn.vag-btn:hover { background: #3b82f6; }
 
 .btn svg {
   width: 19px; height: 19px;
@@ -172,18 +277,42 @@ input::placeholder       { color: #3d4f6a; }
 }
 
 /* ── Точка шаблона ── */
-.dot {
+.dot-wrap {
   position: fixed;
   bottom: 18px;
   right: 20px;
+  display: flex;
+  gap: 8px;
+  z-index: 999;
+}
+
+.dot {
   width: 10px; height: 10px;
   border-radius: 50%;
   background: #475569;
   cursor: default;
-  z-index: 999;
   transition: background 0.4s;
   box-shadow: 0 0 0 2px #0f1623;
+  position: relative;
 }
+
+.dot .dot-label {
+  position: absolute;
+  bottom: 16px;
+  right: 0;
+  white-space: nowrap;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  background: #1a2233;
+  border: 1px solid #2a3548;
+  border-radius: 4px;
+  padding: 2px 6px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.dot:hover .dot-label { opacity: 1; }
 
 .dot.loading { background: #f59e0b; animation: blink 1.2s infinite; }
 .dot.ok      { background: #22c55e; }
@@ -194,27 +323,49 @@ input::placeholder       { color: #3d4f6a; }
   50%       { opacity: 0.35; }
 }
 
-/* ── Скрытый input файла ── */
-#fileInput { display: none; }
+/* ── Скрытые input файлов ── */
+#fileInputKia, #fileInputVag { display: none; }
 
 @media (max-width: 580px) {
   h1 { font-size: 1.5rem; }
   .f { flex: 1 1 100%; }
   .card-body { padding: 16px; }
+  .brand-btn .brand-icon { font-size: 1.1rem; }
 }
 </style>
 </head>
 <body>
-<input type="file" id="fileInput" accept=".docx" onchange="onFilePick(this)">
-<div class="dot loading" id="dot" title="" onclick="onDotClick()"></div>
+<input type="file" id="fileInputKia" accept=".docx" onchange="onFilePick(this,'kia')">
+<input type="file" id="fileInputVag" accept=".docx" onchange="onFilePick(this,'vag')">
+
+<div class="dot-wrap">
+  <div class="dot loading" id="dotKia" title="" onclick="onDotClick('kia')">
+    <span class="dot-label">KIA/HYN шаблон</span>
+  </div>
+  <div class="dot loading" id="dotVag" title="" onclick="onDotClick('vag')">
+    <span class="dot-label">VAG шаблон</span>
+  </div>
+</div>
 
 <div class="wrap">
-  <h1>Генератор договоров </h1>
-  <p class="sub">Только для двигателей Kia/Hyundai</p>
+  <h1>Генератор договоров</h1>
+  <p class="sub" id="subTitle">Kia / Hyundai</p>
+
+  <!-- Выбор типа -->
+  <div class="brand-select">
+    <div class="brand-btn active-kia" id="btnKia" onclick="selectBrand('kia')">
+      <span class="brand-icon">🔧</span>
+      Kia / Hyundai
+    </div>
+    <div class="brand-btn" id="btnVag" onclick="selectBrand('vag')">
+      <span class="brand-icon">🚗</span>
+      VAG Group<br><small style="font-weight:400;color:inherit;opacity:.7">VW · Audi · Skoda · Seat</small>
+    </div>
+  </div>
 
   <!-- Реквизиты -->
   <div class="card">
-    <div class="card-head">
+    <div class="card-head" id="headRekvizity">
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
       Реквизиты договора
     </div>
@@ -228,7 +379,7 @@ input::placeholder       { color: #3d4f6a; }
 
       <div class="f">
         <span>Дата договора</span>
-        <label class="toggle" for="cbDate">
+        <label class="toggle" id="toggleDate" for="cbDate">
           <input type="checkbox" id="cbDate" onchange="toggleDate()">
           <span>Указать дату</span>
         </label>
@@ -242,14 +393,14 @@ input::placeholder       { color: #3d4f6a; }
 
   <!-- Клиент -->
   <div class="card">
-    <div class="card-head">
+    <div class="card-head" id="headClient">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Данные клиента
     </div>
     <div class="card-body">
 
       <div class="f wide">
-        <label class="toggle" for="cbClient">
+        <label class="toggle" id="toggleClient" for="cbClient">
           <input type="checkbox" id="cbClient" onchange="toggleClient()">
           <span>Указать данные клиента</span>
         </label>
@@ -308,7 +459,7 @@ input::placeholder       { color: #3d4f6a; }
 
   <!-- Двигатель -->
   <div class="card">
-    <div class="card-head">
+    <div class="card-head" id="headEngine">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M17.66 6.34l-1.41 1.41M6.34 17.66l-1.41 1.41"/></svg>
       Характеристики двигателя
     </div>
@@ -320,6 +471,11 @@ input::placeholder       { color: #3d4f6a; }
         <datalist id="models">
           <option value="G4FA"><option value="G4FC"><option value="G4FG">
           <option value="G4NA"><option value="G4KD"><option value="G4KE">
+        </datalist>
+        <datalist id="modelsVAG">
+          <option value="CAV"><option value="CAW"><option value="CDA">
+          <option value="CDN"><option value="CFN"><option value="CJS">
+          <option value="CWV"><option value="CCZ"><option value="CZC">
         </datalist>
         <small class="errtxt" id="e-model">Укажите модель двигателя</small>
       </div>
@@ -343,9 +499,46 @@ input::placeholder       { color: #3d4f6a; }
     </div>
   </div>
 
+  <!-- Термонаклейка -->
+  <div class="card">
+    <div class="card-head" id="headTermo">
+      <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="12" y1="12" x2="12" y2="15"/><circle cx="12" cy="16" r="0.5" fill="#f59e0b"/></svg>
+      Термонаклейка
+    </div>
+    <div class="card-body">
+
+      <div class="f wide">
+        <span>Статус термонаклейки</span>
+        <div class="termo-group">
+          <label class="termo-opt selected-kia" id="termoOptAbsent" onclick="selectTermo('absent')">
+            <input type="radio" name="termo" id="radioAbsent" value="absent" checked>
+            <span>ОТСУТСТВУЕТ</span>
+          </label>
+          <label class="termo-opt" id="termoOptCustom" onclick="selectTermo('custom')">
+            <input type="radio" name="termo" id="radioCustom" value="custom">
+            <span>Указать номер</span>
+          </label>
+          <label class="termo-opt" id="termoOptEmpty" onclick="selectTermo('empty')">
+            <input type="radio" name="termo" id="radioEmpty" value="empty">
+            <span>Оставить пустым</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="termoCustomWrap" class="wide" style="display:none;">
+        <div class="f wide" style="margin-top:4px;">
+          <span>Номер термонаклейки</span>
+          <input type="text" id="termoNum" placeholder="Введите номер наклейки...">
+          <small class="errtxt" id="e-termoNum">Введите номер термонаклейки</small>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Стоимость -->
   <div class="card">
-    <div class="card-head">
+    <div class="card-head" id="headPrice">
       <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
       Стоимость
     </div>
@@ -359,10 +552,15 @@ input::placeholder       { color: #3d4f6a; }
           <option value="125000"><option value="129000"><option value="135000">
           <option value="170000"><option value="180000">
         </datalist>
+        <datalist id="pricesVAG">
+          <option value="130000"><option value="140000"><option value="155000">
+          <option value="165000"><option value="205000"><option value="210000">
+          <option value="215000">
+        </datalist>
         <small class="errtxt" id="e-price">Введите корректную сумму</small>
       </div>
 
-      <label class="toggle" for="cbTax" style="align-self:flex-end;">
+      <label class="toggle" id="toggleTax" for="cbTax" style="align-self:flex-end;">
         <input type="checkbox" id="cbTax" onchange="updatePreview()">
         <span>Добавить +7% к сумме</span>
       </label>
@@ -375,48 +573,149 @@ input::placeholder       { color: #3d4f6a; }
     </div>
   </div>
 
-  <button class="btn" onclick="generate()">
+  <button class="btn" id="mainBtn" onclick="generate()">
     <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     СОЗДАТЬ ДОГОВОР И СКАЧАТЬ
   </button>
 </div>
 
 <script>
-// ─── Шаблон ──────────────────────────────────────────────────────────────────
-let tplBuffer = null;
+// ─── Состояние ───────────────────────────────────────────────────────────────
+let tplKia = null;
+let tplVag = null;
+let currentBrand = 'kia';
+let currentTermo = 'absent';
 
-function setDot(state) {
-  const d = document.getElementById('dot');
+// ─── Выбор бренда ────────────────────────────────────────────────────────────
+function selectBrand(brand) {
+  currentBrand = brand;
+  const isVag = brand === 'vag';
+
+  document.getElementById('btnKia').className = 'brand-btn' + (isVag ? '' : ' active-kia');
+  document.getElementById('btnVag').className = 'brand-btn' + (isVag ? ' active-vag' : '');
+  document.getElementById('subTitle').textContent = isVag ? 'VAG Group (VW · Audi · Skoda · Seat)' : 'Kia / Hyundai';
+
+  // Заголовки карточек
+  const heads = ['headRekvizity','headClient','headEngine','headTermo','headPrice'];
+  heads.forEach(id => {
+    const el = document.getElementById(id);
+    if (isVag) el.classList.add('vag-mode'); else el.classList.remove('vag-mode');
+    const svg = el.querySelector('svg');
+    if (svg) svg.style.stroke = isVag ? '#60a5fa' : '';
+  });
+
+  // Цвет accent-color для чекбоксов / радио
+  document.querySelectorAll('.toggle input[type="checkbox"]').forEach(cb => {
+    cb.style.accentColor = isVag ? '#60a5fa' : '#f59e0b';
+  });
+
+  document.querySelectorAll('input[type="radio"]').forEach(r => {
+    r.style.accentColor = isVag ? '#60a5fa' : '#f59e0b';
+  });
+
+  // Фокус полей
+  document.querySelectorAll('input[type="text"]').forEach(inp => {
+    if (isVag) inp.classList.add('focus-vag'); else inp.classList.remove('focus-vag');
+  });
+
+  // Смена списка моделей двигателей
+  const modelInput = document.getElementById('model');
+  modelInput.setAttribute('list', isVag ? 'modelsVAG' : 'models');
+  modelInput.placeholder = isVag ? 'CFN, CWV, CAV...' : 'G4FA, G4FC...';
+  modelInput.value = '';
+  clearErr('model');
+
+  // Смена списка цен
+  const priceInput = document.getElementById('price');
+  priceInput.setAttribute('list', isVag ? 'pricesVAG' : 'prices');
+  priceInput.value = '';
+  clearErr('price');
+  updatePreview();
+
+  // Кнопка
+  const btn = document.getElementById('mainBtn');
+  if (isVag) btn.classList.add('vag-btn'); else btn.classList.remove('vag-btn');
+
+  // Price hint
+  const ph = document.getElementById('priceHint');
+  if (isVag) ph.classList.add('vag-hint'); else ph.classList.remove('vag-hint');
+
+  // Termo options highlight
+  refreshTermoStyle();
+}
+
+// ─── Термонаклейка ───────────────────────────────────────────────────────────
+function selectTermo(val) {
+  currentTermo = val;
+  document.getElementById('radioAbsent').checked = val === 'absent';
+  document.getElementById('radioCustom').checked = val === 'custom';
+  document.getElementById('radioEmpty').checked  = val === 'empty';
+  document.getElementById('termoCustomWrap').style.display = val === 'custom' ? 'block' : 'none';
+  if (val !== 'custom') {
+    clearErr('termoNum');
+    document.getElementById('termoNum').value = '';
+  }
+  refreshTermoStyle();
+}
+
+function refreshTermoStyle() {
+  const selectedClass = currentBrand === 'vag' ? 'selected-vag' : 'selected-kia';
+  ['termoOptAbsent','termoOptCustom','termoOptEmpty'].forEach(id => {
+    document.getElementById(id).classList.remove('selected-kia','selected-vag');
+  });
+  const map = { absent: 'termoOptAbsent', custom: 'termoOptCustom', empty: 'termoOptEmpty' };
+  document.getElementById(map[currentTermo]).classList.add(selectedClass);
+}
+
+function getTermoValue() {
+  if (currentTermo === 'absent') return 'ОТСУТСТВУЕТ';
+  if (currentTermo === 'empty')  return '';
+  return document.getElementById('termoNum').value.trim();
+}
+
+// ─── Шаблоны ─────────────────────────────────────────────────────────────────
+function setDot(which, state) {
+  const id = which === 'kia' ? 'dotKia' : 'dotVag';
+  const d = document.getElementById(id);
   d.className = 'dot ' + state;
-  d.title = state === 'fail' ? 'Шаблон не найден — нажмите чтобы выбрать' :
-            state === 'ok'   ? 'Шаблон загружен' : '';
 }
 
-function onDotClick() {
-  if (!tplBuffer) document.getElementById('fileInput').click();
-}
-
-function onFilePick(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const r = new FileReader();
-  r.onload = e => { tplBuffer = e.target.result; setDot('ok'); };
-  r.readAsArrayBuffer(file);
-}
-
-async function loadTemplate() {
-  setDot('loading');
-  try {
-    const r = await fetch('./shablon_dogovora.docx');
-    if (!r.ok) throw 0;
-    tplBuffer = await r.arrayBuffer();
-    setDot('ok');
-  } catch {
-    setDot('fail');
+function onDotClick(which) {
+  const buf = which === 'kia' ? tplKia : tplVag;
+  if (!buf) {
+    if (which === 'kia') document.getElementById('fileInputKia').click();
+    else document.getElementById('fileInputVag').click();
   }
 }
 
-loadTemplate();
+function onFilePick(input, which) {
+  const file = input.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    if (which === 'kia') tplKia = e.target.result;
+    else tplVag = e.target.result;
+    setDot(which, 'ok');
+  };
+  r.readAsArrayBuffer(file);
+}
+
+async function loadTemplate(filename, which) {
+  setDot(which, 'loading');
+  try {
+    const r = await fetch('./' + filename);
+    if (!r.ok) throw 0;
+    const buf = await r.arrayBuffer();
+    if (which === 'kia') tplKia = buf;
+    else tplVag = buf;
+    setDot(which, 'ok');
+  } catch {
+    setDot(which, 'fail');
+  }
+}
+
+loadTemplate('shablon_dogovora.docx', 'kia');
+loadTemplate('shablon_dogovoraVAG.docx', 'vag');
 
 // ─── Переключатели ───────────────────────────────────────────────────────────
 function toggleDate() {
@@ -510,8 +809,10 @@ const EMPTY_FULL = '____________________________________________________________
 const EMPTY_FULL2 = '\n\n\n\n';
 
 function generate() {
-  if (!tplBuffer) {
-    alert('Шаблон ещё не загружен. Нажмите на точку в правом нижнем углу и выберите shablon_dogovora.docx');
+  const buf = currentBrand === 'kia' ? tplKia : tplVag;
+  if (!buf) {
+    const fname = currentBrand === 'kia' ? 'shablon_dogovora.docx' : 'shablon_dogovoraVAG.docx';
+    alert(`Шаблон для ${currentBrand === 'kia' ? 'Kia/Hyundai' : 'VAG'} ещё не загружен.\nНажмите на точку в правом нижнем углу и выберите ${fname}`);
     return;
   }
 
@@ -521,6 +822,13 @@ function generate() {
   const withClient = document.getElementById('cbClient').checked;
   if (withClient) {
     ['name','bday','pnum','pdate','pcode','pby','addr'].forEach(id => { if (!check(id)) ok = false; });
+  }
+
+  // Валидация термонаклейки
+  if (currentTermo === 'custom') {
+    if (!check('termoNum')) ok = false;
+  } else {
+    clearErr('termoNum');
   }
 
   if (!ok) return;
@@ -535,6 +843,7 @@ function generate() {
   const priceVal  = calcPrice();
   const priceStr  = fmt(priceVal) + ' (' + toWords(priceVal) + ')';
   const engineMod = document.getElementById('model').value.trim();
+  const termoVal  = getTermoValue();
 
   let clientFull, clientFull2, address;
 
@@ -555,7 +864,7 @@ function generate() {
   }
 
   try {
-    const zip = new PizZip(tplBuffer);
+    const zip = new PizZip(buf);
 
     const data = {
       contract_num:  String(contractNum ?? ''),
@@ -567,6 +876,7 @@ function generate() {
       engine:        String(engineMod   ?? ''),
       engine_number: String(engineNum   ?? ''),
       price:         String(priceStr    ?? ''),
+      termonakleika: String(termoVal    ?? ''),
     };
 
     const doc = new docxtemplater(zip, {
@@ -591,7 +901,8 @@ function generate() {
     });
 
     const clientName = withClient ? '_' + document.getElementById('name').value.trim() : '';
-    saveAs(blob, `Договор_№${contractNum}${clientName}.docx`);
+    const brandSuffix = currentBrand === 'vag' ? '_VAG' : '';
+    saveAs(blob, `Договор_№${contractNum}${clientName}${brandSuffix}.docx`);
 
   } catch (e) {
     console.error(e);
